@@ -189,6 +189,8 @@ The implementation is tested on CRuby 3.3, 3.4, and 4.0. Other Ruby implementati
 
 ## Releases
 
+The [versioning policy](VERSIONING.md) defines the public interface, version changes, and deprecation rules.
+
 Signed `v*` tags trigger the release workflow. The tag must match `Crap4Ruby::VERSION`.
 Tests and the CRAP limit run before the gem is built. Publication requires approval in GitHub's `release` environment.
 RubyGems trusted publishing authenticates the workflow. Sigstore signs the built gem, and RubyGems stores its attestation.
