@@ -11,4 +11,9 @@ Rake::TestTask.new(test: :prepare_coverage) do |task|
   task.pattern = "test/**/*_test.rb"
 end
 
-task default: :test
+desc "Run tests and require every library method's CRAP score to be at most 10"
+task crap: :test do
+  ruby "-Ilib", "exe/crap4ruby", "--source-root", "lib", "--threshold", "10"
+end
+
+task default: :crap

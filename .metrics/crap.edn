@@ -1,0 +1,33 @@
+{:entries [
+  {:name "run", :namespace "Crap4Ruby::CLI", :complexity 9, :coverage 100.0, :crap 9.0}
+  {:name "self.walk", :namespace "Crap4Ruby::Discovery", :complexity 9, :coverage 100.0, :crap 9.0}
+  {:name "discover", :namespace "Crap4Ruby::Analyzer", :complexity 8, :coverage 100.0, :crap 8.0}
+  {:name "qualify", :namespace "Crap4Ruby::Analyzer", :complexity 8, :coverage 100.0, :crap 8.0}
+  {:name "add_file", :namespace "Crap4Ruby::Coverage", :complexity 8, :coverage 100.0, :crap 8.0}
+  {:name "decisions", :namespace "Crap4Ruby::Analyzer", :complexity 7, :coverage 100.0, :crap 7.0}
+  {:name "discover_method", :namespace "Crap4Ruby::Analyzer", :complexity 7, :coverage 100.0, :crap 7.0}
+  {:name "self.call", :namespace "Crap4Ruby::Discovery", :complexity 6, :coverage 100.0, :crap 6.0}
+  {:name "run_coverage", :namespace "Crap4Ruby::CLI", :complexity 5, :coverage 100.0, :crap 5.0}
+  {:name "parse_options", :namespace "Crap4Ruby::CLI", :complexity 4, :coverage 100.0, :crap 4.0}
+  {:name "threshold_status", :namespace "Crap4Ruby::CLI", :complexity 4, :coverage 100.0, :crap 4.0}
+  {:name "validate_options", :namespace "Crap4Ruby::CLI", :complexity 4, :coverage 100.0, :crap 4.0}
+  {:name "fraction", :namespace "Crap4Ruby::Coverage", :complexity 4, :coverage 100.0, :crap 4.0}
+  {:name "self.table", :namespace "Crap4Ruby::Report", :complexity 4, :coverage 100.0, :crap 4.0}
+  {:name "self.call", :namespace "Crap4Ruby::Score", :complexity 4, :coverage 100.0, :crap 4.0}
+  {:name "add_suite", :namespace "Crap4Ruby::Coverage", :complexity 3, :coverage 100.0, :crap 3.0}
+  {:name "initialize", :namespace "Crap4Ruby::Coverage", :complexity 3, :coverage 100.0, :crap 3.0}
+  {:name "self.load", :namespace "Crap4Ruby::Coverage", :complexity 3, :coverage 100.0, :crap 3.0}
+  {:name "self.number", :namespace "Crap4Ruby::Report", :complexity 3, :coverage 100.0, :crap 3.0}
+  {:name "self.sorted", :namespace "Crap4Ruby::Report", :complexity 3, :coverage 100.0, :crap 3.0}
+  {:name "body_lines", :namespace "Crap4Ruby::Analyzer", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "call", :namespace "Crap4Ruby::Analyzer", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "collect_boundaries", :namespace "Crap4Ruby::Analyzer", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "load_coverage", :namespace "Crap4Ruby::CLI", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "report_stamp", :namespace "Crap4Ruby::CLI", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "self.changed_files", :namespace "Crap4Ruby::Discovery", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "self.git", :namespace "Crap4Ruby::Discovery", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "self.edn", :namespace "Crap4Ruby::Report", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "boundary?", :namespace "Crap4Ruby::Analyzer", :complexity 1, :coverage 100.0, :crap 1.0}
+  {:name "initialize", :namespace "Crap4Ruby::CLI", :complexity 1, :coverage 100.0, :crap 1.0}
+  {:name "self.write", :namespace "Crap4Ruby::Report", :complexity 1, :coverage 100.0, :crap 1.0}
+]}

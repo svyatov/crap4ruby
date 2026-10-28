@@ -4,8 +4,11 @@ Use Ruby 3.3 or newer. Install dependencies and run the suite:
 
 ```sh
 bundle install
-bundle exec rake test
+bundle exec rake
 ```
+
+The default check runs tests with fresh SimpleCov coverage and requires every library method's CRAP score to be at most 10.
+Use `bundle exec rake test` for tests alone. Open `coverage/index.html` to inspect line coverage.
 
 Add a regression test for a behavior change. Use temporary projects for filesystem, Git, coverage, and CLI tests.
 Keep analyzed code out of the tool's process. Preserve the previous snapshot when analysis fails.

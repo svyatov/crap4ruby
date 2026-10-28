@@ -152,9 +152,14 @@ Branch coverage is not used. Static namespace names do not reflect runtime const
 
 ```sh
 bundle install
-bundle exec rake test
+bundle exec rake
 bundle exec ruby -Ilib exe/crap4ruby --help
 ```
+
+The default task runs the tests with SimpleCov, then fails if any library method's CRAP score exceeds 10.
+`bundle exec rake crap` runs the same check. `bundle exec rake test` runs only the tests and coverage collection.
+Each Rake test run discards the previous resultset so stale coverage cannot improve the score.
+Reports are written to `coverage/index.html`, `coverage/.resultset.json`, and `.metrics/crap.edn`.
 
 The suite exercises real SimpleCov output and subprocess CLI behavior, in addition to parser and scoring fixtures.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidance and [CHANGELOG.md](CHANGELOG.md) for changes.
