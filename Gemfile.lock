@@ -1,0 +1,38 @@
+PATH
+  remote: .
+  specs:
+    crap4ruby (0.1.0)
+      prism (>= 1.0, < 3)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    drb (2.2.3)
+    minitest (6.0.6)
+      drb (~> 2.0)
+      prism (~> 1.5)
+    prism (1.9.0)
+    rake (13.4.2)
+    simplecov (1.3.2)
+
+PLATFORMS
+  arm64-darwin-25
+  ruby
+
+DEPENDENCIES
+  crap4ruby!
+  minitest (~> 6.0)
+  rake (~> 13.0)
+  simplecov (~> 1.3)
+
+CHECKSUMS
+  bundler (4.0.23) sha256=407ba8a1d928f412847f819aa5f8b6aef7c59fb51feb517112af8a165487287b
+  crap4ruby (0.1.0)
+  drb (2.2.3)
+  minitest (6.0.6)
+  prism (1.9.0)
+  rake (13.4.2)
+  simplecov (1.3.2)
+
+BUNDLED WITH
+  4.0.23
