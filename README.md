@@ -6,17 +6,15 @@ crap4ruby identifies complex, under-tested Ruby methods using the Change Risk An
 - Reads SimpleCov reports, including legacy formats and multiple test suites.
 - Prints method scores and writes the snapshot format used by [crapper](https://github.com/unclebob/crapper).
 
-## Install from source
+## Install
 
-Run these commands from this checkout with Ruby 3.3 or newer:
+Ruby 3.3 or newer is required.
 
 ```sh
-bundle install
-gem build crap4ruby.gemspec
-gem install ./crap4ruby-0.1.0.gem
+gem install crap4ruby
 ```
 
-From the project you want to measure:
+In the project you want to measure:
 
 ```sh
 crap4ruby --no-coverage
@@ -26,6 +24,19 @@ crap4ruby app/models lib/billing
 ```
 
 The first command reports complexity alone. The other commands require `coverage/.resultset.json` from your project's test run.
+
+To use Bundler, add `gem "crap4ruby", require: false` to your project's `Gemfile` and run `bundle install`.
+Run the tool with `bundle exec crap4ruby`.
+
+## Install from source
+
+Run these commands from this checkout with Ruby 3.3 or newer:
+
+```sh
+bundle install
+gem build crap4ruby.gemspec
+gem install ./crap4ruby-0.1.0.gem
+```
 
 To use Bundler in the measured project, add this checkout to that project's `Gemfile`:
 
@@ -164,6 +175,14 @@ Reports are written to `coverage/index.html`, `coverage/.resultset.json`, and `.
 The suite exercises real SimpleCov output and subprocess CLI behavior, in addition to parser and scoring fixtures.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidance and [CHANGELOG.md](CHANGELOG.md) for changes.
 The implementation is tested on CRuby 3.3, 3.4, and 4.0. Other Ruby implementations are unverified.
+
+## Releases
+
+Signed `v*` tags trigger the release workflow. The tag must match `Crap4Ruby::VERSION`.
+Tests and the CRAP limit run before the gem is built. Publication requires approval in GitHub's `release` environment.
+RubyGems trusted publishing authenticates the workflow. Sigstore signs the built gem, and RubyGems stores its attestation.
+
+Report defects or ask questions through [GitHub issues](https://github.com/svyatov/crap4ruby/issues).
 
 ## License
 

@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## [Unreleased]
+
+## [0.1.0] - 2026-10-28
 
 ### Added
 
@@ -13,3 +15,6 @@
 ### Changed
 
 - Split CLI execution, AST discovery, and coverage loading into smaller methods without changing their behavior or scoring rules.
+
+[Unreleased]: https://github.com/svyatov/crap4ruby/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/svyatov/crap4ruby/releases/tag/v0.1.0
