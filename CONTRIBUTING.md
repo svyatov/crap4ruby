@@ -4,12 +4,18 @@ Outside contributions are welcome. This guide defines the project's [acceptance 
 
 ## Development
 
-Use Ruby 3.3 or newer. Install dependencies and run the suite:
+Use Ruby 3.3 or newer. Install [Betterleaks](https://github.com/betterleaks/betterleaks) with the `betterleaks` command on your PATH.
+Set up dependencies and Git hooks, then run the suite:
 
 ```sh
-bundle install
+bin/setup
 bundle exec rake
 ```
+
+Before each commit, hooks scan staged changes for secrets and whitespace errors.
+Commit messages must use Conventional Commits.
+Before each push, hooks run `bundle exec rake`.
+Put machine-specific hook settings in the ignored `lefthook-local.yml` file.
 
 The default check runs Steep, requires 100% typed calls across every Ruby file, and runs tests with fresh SimpleCov coverage.
 Every library method's CRAP score must be at most 10.
