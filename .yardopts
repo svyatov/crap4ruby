@@ -1,0 +1,6 @@
+--title "crap4ruby maintainer reference"
+--markup markdown
+--private
+--protected
+--fail-on-warning
+lib/**/*.rb

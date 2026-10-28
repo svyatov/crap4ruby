@@ -1,4 +1,7 @@
 /.bundle/
 /pkg/
 /coverage/
+/doc/
+/.yardoc/
 /*.gem
+/lefthook-local.yml

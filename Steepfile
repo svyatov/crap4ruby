@@ -7,7 +7,7 @@ target :library do
 end
 
 target :development do
-  check "test", "script", "Rakefile", "Gemfile", "gemfiles/release/Gemfile", "crap4ruby.gemspec", "Steepfile"
+  check "test", "script", "bin/*", "Rakefile", "Gemfile", "gemfiles/release/Gemfile", "crap4ruby.gemspec", "Steepfile"
   signature "sig", "sig-development"
   library "prism", "json", "optparse", "find", "open3", "fileutils", "tempfile",
     "tmpdir", "stringio", "shellwords", "coverage", "csv", "pathname"

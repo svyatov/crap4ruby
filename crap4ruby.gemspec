@@ -12,6 +12,7 @@ Gem::Specification.new do |spec|
   homepage = "https://github.com/svyatov/crap4ruby"
   spec.homepage = homepage
   spec.metadata = {
+    "documentation_uri" => "https://www.rubydoc.info/gems/crap4ruby",
     "source_code_uri" => homepage,
     "bug_tracker_uri" => "#{homepage}/issues",
     "changelog_uri" => "#{homepage}/blob/main/CHANGELOG.md",

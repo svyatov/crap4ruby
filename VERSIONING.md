@@ -11,7 +11,8 @@ The compatibility policy covers:
 - The `.metrics/crap.edn` schema, including field meanings and value types.
 - The minimum supported Ruby version.
 
-Terminal table spacing, diagnostic wording, and undocumented Ruby classes are implementation details.
+Terminal table spacing, diagnostic wording, and Ruby classes are implementation details.
+YARD documents the Ruby interfaces for maintainers; those interfaces are outside this compatibility policy.
 Use the CLI and documented snapshot format when integrating with other tools.
 
 ## Version changes

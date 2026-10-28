@@ -3,12 +3,25 @@
 require "optparse"
 
 module Crap4Ruby
+  # Coordinates file discovery, coverage, scoring, and CLI output.
   class CLI
+    # Sets output destinations without running an analysis.
+    #
+    # @param stdout [#puts, #write] destination for reports, help, and version output
+    # @param stderr [#puts, #write] destination for diagnostics and coverage command output
     def initialize(stdout: $stdout, stderr: $stderr)
       @stdout = stdout
       @stderr = stderr
     end
 
+    # Runs the requested analysis and replaces the snapshot after successful scoring.
+    # Help and version requests produce output without writing a snapshot.
+    # Expected usage, input, filesystem, and command errors are printed to stderr.
+    #
+    # @param arguments [Array<String>] command-line tokens; option parsing mutates this array
+    # @return [Integer] 0 on success, 1 on a handled error, or 2 when a score exceeds the threshold
+    # @example Analyze complexity without coverage
+    #   CLI.new.run(["--no-coverage", "--source-root", "lib"])
     def run(arguments)
       options, parser, paths = parse_options(arguments)
       return @stdout.puts(parser) || 0 if options[:help]
@@ -35,6 +48,11 @@ module Crap4Ruby
 
     private
 
+    # Removes parsed options from arguments and returns the remaining path selectors.
+    #
+    # @param arguments [Array<String>] mutable command-line tokens
+    # @return [Array(Hash, OptionParser, Array<String>)] options, parser, and remaining selectors
+    # @raise [OptionParser::ParseError] if an option or threshold is invalid
     def parse_options(arguments)
       # @type var options: options
       options = {root: Dir.pwd, source_roots: [], changed: false, coverage: "coverage/.resultset.json"}
@@ -74,12 +92,22 @@ module Crap4Ruby
       [options, parser, parser.parse(arguments)]
     end
 
+    # Rejects a coverage command when coverage is disabled or explicitly read-only.
+    #
+    # @param options [Hash] parsed CLI options
+    # @return [void]
+    # @raise [Error] if coverage options conflict
     def validate_options(options)
       if options[:command] && (options[:no_coverage] || options[:existing])
         raise Error, "--coverage-command cannot be combined with --no-coverage or --use-existing-coverage"
       end
     end
 
+    # Compares unrounded, known CRAP scores with a strict upper limit.
+    #
+    # @param entries [Array<Entry>] scored methods
+    # @param threshold [Float, nil] maximum allowed score, or nil to disable the check
+    # @return [Integer] 2 after reporting a violation to stderr, otherwise 0
     def threshold_status(entries, threshold)
       if threshold && entries.any? { |entry| entry.crap && entry.crap > threshold }
         @stderr.puts("CRAP threshold exceeded: #{threshold}")
@@ -95,6 +123,15 @@ module Crap4Ruby
       Coverage.load(report, root: root)
     end
 
+    # Runs a shell command at root and forwards its combined output to stderr.
+    # Requires success and a changed report stamp before coverage can be consumed.
+    #
+    # @param command [String] command passed to `sh -c` with the caller's environment
+    # @param root [String] command working directory
+    # @param report [String] expected coverage report path
+    # @return [void]
+    # @raise [Error] if the command is empty, fails, or leaves the report stamp unchanged
+    # @raise [SystemCallError] if the command cannot start or report metadata cannot be read
     def run_coverage(command, root, report)
       raise Error, "--coverage-command must not be empty" if command.strip.empty?
 
@@ -108,6 +145,11 @@ module Crap4Ruby
       raise Error, "coverage command did not refresh #{report}" if report_stamp(report) == before
     end
 
+    # Captures metadata used to detect a newly generated or refreshed report.
+    #
+    # @param path [String] coverage report path
+    # @return [Array(Integer, Time, Time, Integer), nil] inode, modification time,
+    #   change time, and size; nil if the path does not exist
     def report_stamp(path)
       stat = File.stat(path)
       [stat.ino, stat.mtime, stat.ctime, stat.size]

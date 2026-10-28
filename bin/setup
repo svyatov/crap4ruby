@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+Dir.chdir(File.expand_path("..", File.dirname(__FILE__))) do
+  system("bundle", "install", exception: true)
+  system("betterleaks", "version", out: File::NULL, exception: true)
+  system("bundle", "exec", "lefthook", "install", exception: true)
+end
