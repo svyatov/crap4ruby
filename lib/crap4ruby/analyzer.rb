@@ -1,7 +1,16 @@
 # frozen_string_literal: true
 
 module Crap4Ruby
+  # Finds explicit Ruby method definitions without executing source code.
   class Analyzer
+    # Analyzes method bodies and parameter defaults with Prism.
+    #
+    # @param source [String] Ruby source text
+    # @param path [String] source label used in results and parse errors
+    # @return [Array<MethodInfo>] methods in traversal order, including nested definitions
+    # @raise [Error] if source cannot be parsed
+    # @example Analyze a method without loading it
+    #   Analyzer.new.call("def eligible?(age) = age >= 18", path: "person.rb")
     def call(source, path:)
       result = Prism.parse(source)
       unless result.success?
@@ -13,6 +22,13 @@ module Crap4Ruby
 
     private
 
+    # Tracks lexical owners; skips owners that cannot be resolved statically.
+    #
+    # @param node [Prism::Node, nil] subtree to visit
+    # @param scope [Array<String>] lexical namespace components
+    # @param singleton [Boolean] whether definitions belong to a singleton class
+    # @param path [String] source label
+    # @return [Array<MethodInfo>] discovered method definitions
     def discover(node, scope, singleton, path)
       return [] unless node
 
@@ -30,6 +46,13 @@ module Crap4Ruby
       end
     end
 
+    # Measures a definition independently from definitions nested within it.
+    #
+    # @param node [Prism::DefNode] method definition
+    # @param scope [Array<String>] lexical namespace components
+    # @param singleton [Boolean] whether the enclosing scope is a singleton class
+    # @param path [String] source label
+    # @return [Array<MethodInfo>] this method and its nested definitions
     def discover_method(node, scope, singleton, path)
       owner = node.receiver && !node.receiver.is_a?(Prism::SelfNode) ? qualify(node.receiver, scope) : scope
       return [] unless owner
@@ -41,6 +64,13 @@ module Crap4Ruby
         discover(node.body, scope, singleton, path)
     end
 
+    # Resolves constant syntax without looking up runtime constants.
+    # Declarations append names; references can reuse a lexical ancestor.
+    #
+    # @param node [Prism::Node, nil] namespace expression
+    # @param scope [Array<String>] lexical namespace components
+    # @param declaration [Boolean] whether the expression declares a namespace
+    # @return [Array<String>, nil] qualified components, or nil for dynamic expressions
     def qualify(node, scope, declaration: false)
       case node
       when Prism::ParenthesesNode
@@ -56,6 +86,10 @@ module Crap4Ruby
       end
     end
 
+    # Counts branch operations, including safe navigation, outside nested definitions.
+    #
+    # @param node [Prism::Node, nil] subtree to measure
+    # @return [Integer] number of decisions, excluding the method's base complexity
     def decisions(node)
       return 0 unless node
       return 0 if boundary?(node)
@@ -77,6 +111,10 @@ module Crap4Ruby
       [Prism::DefNode, Prism::ClassNode, Prism::ModuleNode, Prism::SingletonClassNode].any? { |type| node.is_a?(type) }
     end
 
+    # Selects body lines without nested methods, classes, or modules.
+    #
+    # @param node [Prism::Node, nil] method body
+    # @return [Array<Integer>] one-based source lines; empty for an absent body
     def body_lines(node)
       return [] unless node
 

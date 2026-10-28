@@ -3,7 +3,14 @@
 require "json"
 
 module Crap4Ruby
+  # Merges SimpleCov line coverage across named test suites.
   class Coverage
+    # Reads a SimpleCov resultset, accepting legacy arrays and line-coverage objects.
+    #
+    # @param path [String] JSON resultset path, relative to the working directory or absolute
+    # @param root [String] base directory for source paths inside the report
+    # @return [Coverage] merged coverage
+    # @raise [Error] if the report cannot be read, parsed, or validated
     def self.load(path, root:)
       new(JSON.parse(File.read(path)), root: root)
     rescue SystemCallError => error
@@ -12,6 +19,11 @@ module Crap4Ruby
       raise Error, "#{path}: invalid SimpleCov report (#{error.message})"
     end
 
+    # Validates and merges suite reports by the maximum hit count for each line.
+    #
+    # @param suites [Hash{String => Hash}] parsed resultset keyed by suite name
+    # @param root [String] base directory for relative source paths
+    # @raise [Error] if suites or line coverage are malformed
     def initialize(suites, root:)
       raise Error, "expected named test suites" unless suites.is_a?(Hash) && !suites.empty?
 
@@ -19,6 +31,12 @@ module Crap4Ruby
       suites.each_value { |suite| add_suite(suite, root) }
     end
 
+    # Measures executable body lines with positive hit counts.
+    # Null and out-of-range lines do not enter the denominator.
+    #
+    # @param method [MethodInfo] method whose path and body lines select coverage
+    # @return [Float, nil] fraction from 0 to 1; zero for an absent file,
+    #   or nil when a reported file has no measurable body lines
     def fraction(method)
       path = File.expand_path(method.path)
       path = File.realpath(path) if File.exist?(path)
@@ -41,6 +59,13 @@ module Crap4Ruby
       suite["coverage"].each { |path, data| add_file(path, data, root) }
     end
 
+    # Normalizes a source path and merges line counts across suites.
+    #
+    # @param path [String] source path from a suite report
+    # @param data [Array<Integer, nil>, Hash] legacy counts or an object with a `lines` array
+    # @param root [String] base directory for relative source paths
+    # @return [void]
+    # @raise [Error] if line counts are invalid
     def add_file(path, data, root)
       key = File.expand_path(path, root)
       key = File.realpath(key) if File.exist?(key)
