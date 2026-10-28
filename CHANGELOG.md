@@ -5,6 +5,8 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-28
+
 ### Changed
 
 - Document single-file analysis, contribution and private reporting policies, and the public compatibility policy.
@@ -24,5 +26,6 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 - Split CLI execution, AST discovery, and coverage loading into smaller methods without changing their behavior or scoring rules.
 
-[Unreleased]: https://github.com/svyatov/crap4ruby/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/svyatov/crap4ruby/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/svyatov/crap4ruby/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/svyatov/crap4ruby/releases/tag/v0.1.0
