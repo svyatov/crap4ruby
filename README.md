@@ -2,9 +2,10 @@
 
 crap4ruby identifies complex, under-tested Ruby methods using the Change Risk Anti-Pattern (CRAP) metric.
 
-- Analyzes Ruby 3.3+ source with Prism without loading application code.
-- Reads SimpleCov reports, including legacy formats and multiple test suites.
-- Prints method scores and writes the snapshot format used by [crapper](https://github.com/unclebob/crapper).
+- Analyzes Ruby 3.3+ methods without loading application code.
+- Ranks methods using complexity and test coverage, rather than complexity alone.
+- Reads existing SimpleCov reports and merges coverage across test suites.
+- Checks one file, directories, or only files changed in Git.
 
 ## Install
 
@@ -14,12 +15,22 @@ Ruby 3.3 or newer is required.
 gem install crap4ruby
 ```
 
-In the project you want to measure:
+In an empty directory, create a sample and analyze it:
+
+```sh
+printf 'def eligible?(age) = age >= 18\n' > sample.rb
+crap4ruby --no-coverage sample.rb
+# Reports eligible? with CC 1; coverage and CRAP are N/A.
+# Writes .metrics/crap.edn.
+```
+
+In an existing project, select the source you want to measure:
 
 ```sh
 crap4ruby --no-coverage
 crap4ruby
 crap4ruby --threshold 30
+crap4ruby app/models/user.rb
 crap4ruby app/models lib/billing
 ```
 
@@ -48,7 +59,7 @@ Then run `bundle install` and `bundle exec crap4ruby` in that project.
 
 ## Set up coverage
 
-[SimpleCov](https://github.com/simplecov-ruby/simplecov) must start before the application loads. Add it to the measured project's test dependencies:
+[SimpleCov](https://github.com/simplecov-ruby/simplecov) must start before the application loads. Add it to the measured project's `Gemfile`:
 
 ```ruby
 gem "simplecov", require: false, group: :test
@@ -104,7 +115,7 @@ Every successful analysis replaces the snapshot, including filtered analyses and
 
 ## Complexity and coverage
 
-The formula uses a coverage fraction between 0 and 1:
+The scoring engine uses this formula, with coverage expressed as a fraction between 0 and 1:
 
 ```text
 CRAP = CC^2 * (1 - coverage)^3 + CC
@@ -183,6 +194,7 @@ Tests and the CRAP limit run before the gem is built. Publication requires appro
 RubyGems trusted publishing authenticates the workflow. Sigstore signs the built gem, and RubyGems stores its attestation.
 
 Report defects or ask questions through [GitHub issues](https://github.com/svyatov/crap4ruby/issues).
+Leonid Svyatov maintains this project. Security fixes target the latest release; see the [security policy](SECURITY.md).
 
 ## License
 
