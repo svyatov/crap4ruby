@@ -4,6 +4,8 @@ assert_lefthook_installed: true
 pre-commit:
   parallel: true
   jobs:
+    - name: lint
+      run: bundle exec rake lint
     - name: secrets
       run: betterleaks git --pre-commit --staged --redact --verbose
     - name: whitespace

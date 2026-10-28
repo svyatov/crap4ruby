@@ -3,14 +3,24 @@ class AnalyzerTest < Minitest::Test
   def test_finds_a_method_without_executing_source: () -> void
   def test_resolves_namespaces_and_singleton_methods: () -> void
   def test_counts_decisions_inside_blocks_and_lambdas: () -> void
+  def test_preserves_reference_iteration_syntax_rules: () -> void
   def test_counts_loop_case_pattern_and_rescue_decisions: () -> void
-  def test_separates_nested_methods_and_excludes_their_coverage_lines: () -> void
+  def test_omits_post_test_loop_increments_but_counts_their_predicates: () -> void
+  def test_counts_nested_method_decisions_but_excludes_their_coverage_lines: () -> void
   def test_rejects_invalid_source_with_its_location: () -> void
   def test_ignores_keywords_in_comments_and_strings_and_handles_empty_methods: () -> void
   def test_counts_safe_navigation_in_compound_assignments: () -> void
+  def test_discounts_repeated_safe_navigation_until_local_assignment: () -> void
+  def test_resets_safe_navigation_for_compound_multiple_and_loop_assignments: () -> void
+  def test_pattern_and_regexp_bindings_do_not_reset_safe_navigation: () -> void
+  def test_visits_unless_else_before_the_main_body_for_reference_discounts: () -> void
+  def test_visits_pattern_before_guard_without_counting_the_guard_wrapper: () -> void
   def test_resolves_constant_singleton_classes_and_qualified_self_references: () -> void
-  def test_counts_decisions_in_parameter_defaults: () -> void
+  def test_excludes_decisions_in_parameter_defaults: () -> void
+  def test_finds_nested_methods_in_parameter_defaults: () -> void
+  def test_finds_methods_in_superclass_expressions_in_the_surrounding_scope: () -> void
   def test_skips_dynamic_namespace_subtrees_without_executing_them: () -> void
+  def test_finds_literal_define_method_blocks_and_their_nested_definitions: () -> void
 end
 
 class CLITest < Minitest::Test
@@ -25,6 +35,12 @@ class CLITest < Minitest::Test
   def git: (*String arguments) -> void
   def test_writes_complexity_only_table_and_snapshot: () -> void
   def test_reads_coverage_and_compares_unrounded_scores: () -> void
+  def test_preserves_decimal_threshold_precision: () -> void
+  def test_requires_unknown_scores_to_fit_the_threshold_at_zero_coverage: () -> void
+  def test_prioritizes_measured_violations_over_unknown_scores: () -> void
+  def test_rejects_unrepresentable_method_names_without_replacing_snapshot: () -> void
+  def test_escapes_control_characters_in_literal_method_names: () -> void
+  def test_rejects_negative_thresholds_that_underflow_float_precision: () -> void
   def test_discovers_source_and_prunes_tests_hidden_and_generated_trees: () -> void
   def test_combines_source_roots_paths_and_fragment_filters_without_duplicates: () -> void
   def test_errors_preserve_previous_snapshot: () -> void
@@ -53,6 +69,14 @@ class ReportTest < Minitest::Test
 end
 
 class IntegrationTest < Minitest::Test
+  def with_coverage: (String source, String invocation) { (String root) -> void } -> void
+  def test_scores_executable_interpolations_in_a_final_heredoc: () -> void
+  def test_excludes_nested_method_heredocs_from_outer_coverage: () -> void
+  def test_accepts_a_threshold_equal_to_the_exact_score: () -> void
   def test_executable_returns_usage_errors_to_the_shell: () -> void
+  def test_reports_unknown_coverage_when_a_body_shares_its_definition_line: () -> void
+  def test_measures_implicit_rescue_bodies_without_the_definition_line: () -> void
+  def test_measures_define_method_bodies_with_numbered_parameters: () -> void
+  def test_does_not_attribute_code_after_a_definition_to_its_body: () -> void
   def test_real_simplecov_result_distinguishes_loaded_and_called_methods: () -> void
 end

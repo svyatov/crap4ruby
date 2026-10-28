@@ -6,6 +6,24 @@ require "open3"
 
 # @type self: Rake::DSL
 
+desc "Check Ruby style, formatting, performance, and Minitest and Rake usage"
+task :lint do
+  sh "bundle", "exec", "rubocop"
+end
+
+desc "Apply safe Ruby style and formatting corrections"
+task :format do
+  sh "bundle", "exec", "rubocop", "--autocorrect"
+end
+
+desc "Check development and release dependencies against current security advisories"
+task :audit do
+  sh "bundle", "exec", "bundle-audit", "check", "--update", "--database", ".cache/ruby-advisory-db"
+  sh "bundle", "exec", "bundle-audit", "check", "--gemfile-lock", "gemfiles/release/Gemfile.lock",
+    "--database", ".cache/ruby-advisory-db"
+end
+
+desc "Remove stale coverage before running tests"
 task :prepare_coverage do
   FileUtils.rm_f(File.expand_path("coverage/.resultset.json", File.dirname(__FILE__)))
 end
@@ -36,20 +54,25 @@ task :"docs:check" do
   sh "bundle", "exec", "yard", "doc", "--no-output"
   # YARD synthesizes reader descriptions; require source comments and explicit return types.
   query = "object.type == :method && object.visibility == :public && " \
-    "(object.docstring.blank? || (object.is_attribute? && " \
-    "(object.docstring.line_range.nil? || !object.tag(:return)&.types&.any?)))"
+          "(object.docstring.blank? || (object.is_attribute? && " \
+          "(object.docstring.line_range.nil? || !object.tag(:return)&.types&.any?)))"
   output, status = Open3.capture2("bundle", "exec", "yard", "doc", "--list",
     "--query", query)
   abort "YARD documentation check failed" unless status.success?
-  abort "Public methods or readers need YARD documentation and reader return types:\n#{output}" unless output.strip.empty?
+  unless output.strip.empty?
+    abort "Public methods or readers need YARD documentation and reader return types:\n#{output}"
+  end
 end
 
-task default: [:types, :crap, :"docs:check"]
+desc "Run all code quality checks"
+task check: %i[lint types crap docs:check audit]
+
+task default: :check
 
 desc "Refresh dependency locks and checksums for tests and release tools"
 task :lock do
   bundler_version = Bundler.locked_gems.bundler_version.to_s
-  abort "Run with Bundler #{bundler_version}" unless Bundler::VERSION == bundler_version
+  abort "Run with Bundler #{bundler_version}" unless bundler_version == Bundler::VERSION
   Bundler.with_unbundled_env do
     %w[Gemfile gemfiles/release/Gemfile].each do |gemfile|
       sh({"BUNDLE_GEMFILE" => File.expand_path(gemfile, File.dirname(__FILE__))},

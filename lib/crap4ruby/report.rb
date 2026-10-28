@@ -21,16 +21,26 @@ module Crap4Ruby
     # @return [String] table with one decimal place for percentages and scores, ending with a newline
     def self.table(entries)
       rows = [["Function", "Namespace", "CC", "Cov%", "CRAP"]] + entries.map do |entry|
-        [entry.name, entry.namespace, entry.complexity.to_s,
+        [label(entry.name), label(entry.namespace), entry.complexity.to_s,
           entry.coverage ? format("%.1f%%", entry.coverage) : "N/A",
           entry.crap ? format("%.1f", entry.crap) : "N/A"]
       end
       widths = rows.transpose.map { |column| column.map(&:length).max }
       lines = rows.map do |row|
-        row.each_with_index.map { |value, index| index < 2 ? value.ljust(widths[index]) : value.rjust(widths[index]) }.join("  ")
+        row.each_with_index.map do |value, index|
+          index < 2 ? value.ljust(widths[index]) : value.rjust(widths[index])
+        end.join("  ")
       end
       lines.insert(1, "-" * lines.first.length)
-      (["CRAP Report", "==========="] + lines).join("\n") + "\n"
+      "#{(["CRAP Report", "==========="] + lines).join("\n")}\n"
+    end
+
+    # Keeps names with control characters on one terminal line.
+    #
+    # @param value [String] method name, namespace, or diagnostic label
+    # @return [String] original text, or a quoted JSON string when escaping is needed
+    def self.label(value)
+      value.match?(/[[:cntrl:]]/) ? JSON.generate(value) : value
     end
 
     # Serializes the crapper-compatible snapshot, preserving entry order.
@@ -48,7 +58,7 @@ module Crap4Ruby
 
     # Formats an EDN number with at most four decimal places and at least one.
     #
-    # @param value [Float, nil] percentage or CRAP score
+    # @param value [Float, Rational, nil] percentage or CRAP score
     # @return [String] decimal representation, or `nil` for an unknown value
     def self.number(value)
       return "nil" if value.nil?

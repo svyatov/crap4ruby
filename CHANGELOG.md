@@ -5,6 +5,20 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Use RuboCop 1.92.1 complexity rules, including iteration blocks, safe-navigation discounts, rescue groups, and nested bodies, while excluding a method's own parameter defaults.
+- Discover bare `define_method` calls with literal symbol or string names and blocks.
+- Reject literal `define_method` names that cannot be represented in UTF-8, preserving the previous snapshot.
+- Report N/A for coverage and CRAP when a body shares its declaration line. Unknown scores pass a requested threshold only when their maximum possible score fits it; otherwise the check returns exit 1. These scoring and exit-code changes require a minor release. Regenerate coverage and snapshots and review thresholds when upgrading.
+
+### Fixed
+
+- Include executable interpolation lines when a method ends with a heredoc.
+- Discover explicit method definitions inside parameter defaults and superclass expressions.
+- Compare exact CRAP scores with decimal thresholds without floating-point rounding errors.
+- Avoid attributing trailing code on a method's closing line to the method, and escape control characters in displayed method names.
+
 ## [0.1.1] - 2026-10-28
 
 ### Changed

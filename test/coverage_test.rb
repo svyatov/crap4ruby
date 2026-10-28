@@ -41,9 +41,11 @@ class CoverageTest < Minitest::Test
       File.write(report, JSON.generate("RSpec" => {"coverage" => {"empty.rb" => {"lines" => [1, nil]}}}))
       coverage = Crap4Ruby::Coverage.load(report, root: root)
       method = Crap4Ruby::MethodInfo.new("pick", "Sample", 3, [2], File.join(root, "absent.rb"))
-      assert_equal [0.0, 12.0], Crap4Ruby::Score.call(method, coverage).then { |entry| [entry.coverage, entry.crap] }
+
+      assert_equal([0.0, 12.0], Crap4Ruby::Score.call(method, coverage).then { |entry| [entry.coverage, entry.crap] })
       assert_nil Crap4Ruby::Score.call(method, nil).crap
       empty = method.with(path: File.join(root, "empty.rb"))
+
       assert_nil Crap4Ruby::Score.call(empty, coverage).coverage
     end
   end

@@ -1,5 +1,6 @@
 module Crap4Ruby
   VERSION: String
+  type score = Float | Rational
 
   class Error < StandardError
   end
@@ -8,12 +9,12 @@ module Crap4Ruby
     attr_reader name: String
     attr_reader namespace: String
     attr_reader complexity: Integer
-    attr_reader lines: Array[Integer]
+    attr_reader lines: Array[Integer]?
     attr_reader path: String
-    def self.new: (String name, String namespace, Integer complexity, Array[Integer] lines, String path) -> instance
-                | (name: String, namespace: String, complexity: Integer, lines: Array[Integer], path: String) -> instance
+    def self.new: (String name, String namespace, Integer complexity, Array[Integer]? lines, String path) -> instance
+                | (name: String, namespace: String, complexity: Integer, lines: Array[Integer]?, path: String) -> instance
     alias self.[] self.new
-    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?lines: Array[Integer], ?path: String) -> instance
+    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?lines: Array[Integer]?, ?path: String) -> instance
   end
 
   class Entry < Data
@@ -21,24 +22,36 @@ module Crap4Ruby
     attr_reader namespace: String
     attr_reader complexity: Integer
     attr_reader coverage: Float?
-    attr_reader crap: Float?
+    attr_reader crap: score?
     attr_reader path: String
-    def self.new: (String name, String namespace, Integer complexity, Float? coverage, Float? crap, String path) -> instance
-                | (name: String, namespace: String, complexity: Integer, coverage: Float?, crap: Float?, path: String) -> instance
+    def self.new: (String name, String namespace, Integer complexity, Float? coverage, score? crap, String path) -> instance
+                | (name: String, namespace: String, complexity: Integer, coverage: Float?, crap: score?, path: String) -> instance
     alias self.[] self.new
-    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?coverage: Float?, ?crap: Float?, ?path: String) -> instance
+    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?coverage: Float?, ?crap: score?, ?path: String) -> instance
   end
 
   class Analyzer
+    ITERATING_METHODS: Array[Symbol]
     def call: (String source, path: String) -> Array[MethodInfo]
     private
     def discover: (Prism::Node? node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
+    def discover_class: (Prism::ClassNode | Prism::ModuleNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
+    def discover_call: (Prism::CallNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
     def discover_method: (Prism::DefNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
+    def discover_block: (Prism::BlockNode block, String name, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
+    def defined_name: (Prism::Node node) -> String?
+    def method_owner: (Prism::DefNode node, Array[String] scope) -> Array[String]?
     def qualify: (Prism::Node? node, Array[String] scope, ?declaration: bool) -> Array[String]?
-    def decisions: (Prism::Node? node) -> Integer
+    def decisions: (Prism::Node? node, ?Hash[Symbol, bool] seen, ?target: bool) -> Integer
+    def child_decisions: (Prism::Node node, Hash[Symbol, bool] seen, bool target) -> Integer
+    def assignment_target?: (Prism::Node node, Prism::Node child, bool target) -> bool
+    def decision?: (Prism::Node node) -> bool
+    def safe_navigation?: (Prism::Node node, Hash[Symbol, bool] seen) -> bool
+    def iteration?: (Prism::Node node) -> bool
     def boundary?: (Prism::Node node) -> bool
-    def body_lines: (Prism::Node? node) -> Array[Integer]
-    def collect_boundaries: (Prism::Node node, Array[Integer] excluded) -> void
+    def body_lines: (Prism::Node? node, after: Integer, ending: Prism::Location) -> Array[Integer]?
+    def trailing_code?: (Prism::Location location) -> bool
+    def body_end_line: (Prism::Node node, Array[Integer] excluded) -> Integer
   end
 
   type json = nil | bool | Integer | Float | String | Array[json] | Hash[String, json]
@@ -47,7 +60,7 @@ module Crap4Ruby
     @files: Hash[String, Array[Integer?]]
     def self.load: (String path, root: String) -> Coverage
     def initialize: (json suites, root: String) -> void
-    def fraction: (MethodInfo method) -> Float?
+    def fraction: (MethodInfo method) -> Rational?
     private
     def add_suite: (json suite, String root) -> void
     def add_file: (String path, json data, String root) -> void
@@ -56,6 +69,7 @@ module Crap4Ruby
   module Discovery
     EXCLUDED: Array[String]
     def self.call: (root: String, source_roots: Array[String], paths: Array[String], changed: bool) -> Array[String]
+    def self.selection_roots: (String root, Array[String] source_roots, Array[String] existing) -> Array[String]
     def self.walk: (String root) -> Array[String]
     def self.git: (String root, *String arguments) -> String
     def self.changed_files: (String root) -> Array[String]
@@ -68,8 +82,9 @@ module Crap4Ruby
   module Report
     def self.sorted: (Array[Entry] entries) -> Array[Entry]
     def self.table: (Array[Entry] entries) -> String
+    def self.label: (String value) -> String
     def self.edn: (Array[Entry] entries) -> String
-    def self.number: (Float? value) -> String
+    def self.number: (score? value) -> String
     def self.write: (Array[Entry] entries, root: String) -> String
   end
 
@@ -80,15 +95,16 @@ module Crap4Ruby
 
   class CLI
     type options = { root: String, source_roots: Array[String], changed: bool, coverage: String,
-      ?help: bool, ?version: bool, ?no_coverage: bool, ?existing: bool, ?command: String, ?threshold: Float }
+      ?help: bool, ?version: bool, ?no_coverage: bool, ?existing: bool, ?command: String, ?threshold: Rational }
     @stdout: _Output
     @stderr: _Output
     def initialize: (?stdout: _Output, ?stderr: _Output) -> void
     def run: (Array[String] arguments) -> Integer
     private
+    def analyze: (Array[String] files, Coverage? coverage) -> Array[Entry]
     def parse_options: (Array[String] arguments) -> [options, OptionParser, Array[String]]
     def validate_options: (options options) -> void
-    def threshold_status: (Array[Entry] entries, Float? threshold) -> Integer
+    def threshold_status: (Array[Entry] entries, Rational? threshold) -> Integer
     def load_coverage: (options options, String root) -> Coverage
     def run_coverage: (String command, String root, String report) -> void
     def report_stamp: (String path) -> [Integer, Time, Time, Integer]?

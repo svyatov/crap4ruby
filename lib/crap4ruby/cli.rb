@@ -19,7 +19,7 @@ module Crap4Ruby
     # Expected usage, input, filesystem, and command errors are printed to stderr.
     #
     # @param arguments [Array<String>] command-line tokens; option parsing mutates this array
-    # @return [Integer] 0 on success, 1 on a handled error, or 2 when a score exceeds the threshold
+    # @return [Integer] 0 on success, 1 on error or an uncertain threshold, 2 on a measured violation
     # @example Analyze complexity without coverage
     #   CLI.new.run(["--no-coverage", "--source-root", "lib"])
     def run(arguments)
@@ -33,10 +33,7 @@ module Crap4Ruby
 
       files = Discovery.call(root: root, source_roots: options[:source_roots], paths: paths, changed: options[:changed])
       coverage = load_coverage(options, root) unless options[:no_coverage] || files.empty?
-      entries = files.flat_map do |path|
-        Analyzer.new.call(File.binread(path), path: path).map { |method| Score.call(method, coverage) }
-      end
-      entries = Report.sorted(entries)
+      entries = Report.sorted(analyze(files, coverage))
       path = Report.write(entries, root: root)
       @stdout.write(Report.table(entries))
       @stderr.puts("Wrote #{path}")
@@ -47,6 +44,12 @@ module Crap4Ruby
     end
 
     private
+
+    def analyze(files, coverage)
+      files.flat_map do |path|
+        Analyzer.new.call(File.binread(path), path: path).map { |method| Score.call(method, coverage) }
+      end
+    end
 
     # Removes parsed options from arguments and returns the remaining path selectors.
     #
@@ -72,17 +75,22 @@ module Crap4Ruby
           options[:coverage] = path
         end
         cli.on("--no-coverage", "Complexity only; coverage and CRAP are N/A") { options[:no_coverage] = true }
-        cli.on("--use-existing-coverage", "Read reports without running tests (the default)") { options[:existing] = true }
+        cli.on("--use-existing-coverage", "Read reports without running tests (the default)") do
+          options[:existing] = true
+        end
         cli.on("--coverage-command COMMAND", "Run a shell command that refreshes the resultset") do |command|
           # @type var command: String
           options[:command] = command
         end
-        cli.on("--threshold NUMBER", "Exit 2 when CRAP exceeds this value") do |value|
+        cli.on("--threshold NUMBER", "Exit 2 above limit; exit 1 if unknown scores could exceed it") do |value|
           # @type var value: String
           number = Float(value)
-          raise OptionParser::InvalidArgument, "threshold must be finite and nonnegative" unless number.finite? && number >= 0
+          raise ArgumentError unless number.finite?
 
-          options[:threshold] = number
+          threshold = Rational(value, exception: false) || number.to_r
+          raise ArgumentError if threshold.negative?
+
+          options[:threshold] = threshold
         rescue ArgumentError
           raise OptionParser::InvalidArgument, "threshold must be finite and nonnegative"
         end
@@ -98,23 +106,30 @@ module Crap4Ruby
     # @return [void]
     # @raise [Error] if coverage options conflict
     def validate_options(options)
-      if options[:command] && (options[:no_coverage] || options[:existing])
-        raise Error, "--coverage-command cannot be combined with --no-coverage or --use-existing-coverage"
-      end
+      return unless options[:command] && (options[:no_coverage] || options[:existing])
+
+      raise Error, "--coverage-command cannot be combined with --no-coverage or --use-existing-coverage"
     end
 
-    # Compares unrounded, known CRAP scores with a strict upper limit.
+    # Checks measured scores and bounds unknown scores at zero coverage.
     #
     # @param entries [Array<Entry>] scored methods
-    # @param threshold [Float, nil] maximum allowed score, or nil to disable the check
-    # @return [Integer] 2 after reporting a violation to stderr, otherwise 0
+    # @param threshold [Rational, nil] maximum allowed score, or nil to disable the check
+    # @return [Integer] 2 for a measured violation, 1 if uncertain, otherwise 0
     def threshold_status(entries, threshold)
-      if threshold && entries.any? { |entry| entry.crap && entry.crap > threshold }
-        @stderr.puts("CRAP threshold exceeded: #{threshold}")
-        2
-      else
-        0
+      return 0 unless threshold
+
+      if entries.any? { |entry| entry.crap && entry.crap > threshold }
+        @stderr.puts("CRAP threshold exceeded")
+        return 2
       end
+
+      uncertain = entries.select { |entry| !entry.crap && entry.complexity * (entry.complexity + 1) > threshold }
+      uncertain.each do |entry|
+        @stderr.puts("Cannot verify CRAP threshold: #{Report.label("#{entry.namespace}##{entry.name}")} " \
+                     "has unknown coverage (maximum #{entry.complexity * (entry.complexity + 1)})")
+      end
+      uncertain.empty? ? 0 : 1
     end
 
     def load_coverage(options, root)
@@ -141,7 +156,10 @@ module Crap4Ruby
         output.each_line { |line| @stderr.write(line) }
         process.value
       end
-      raise Error, "coverage command failed (exit #{status.exitstatus || "signal #{status.termsig}"})" unless status.success?
+      unless status.success?
+        raise Error,
+          "coverage command failed (exit #{status.exitstatus || "signal #{status.termsig}"})"
+      end
       raise Error, "coverage command did not refresh #{report}" if report_stamp(report) == before
     end
 

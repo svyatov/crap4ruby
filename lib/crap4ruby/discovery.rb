@@ -22,6 +22,27 @@ module Crap4Ruby
     # @raise [SystemCallError] if paths cannot be read or resolved
     def self.call(root:, source_roots:, paths:, changed:)
       existing, filters = paths.partition { |path| File.exist?(File.expand_path(path, root)) }
+      roots = selection_roots(root, source_roots, existing)
+      files = roots.flat_map { |path| File.file?(path) ? [path] : walk(path) }
+      files = files.select { |path| File.extname(path) == ".rb" }.map { |path| File.realpath(path) }.uniq.sort
+      unless filters.empty?
+        files.select! do |path|
+          filters.any? do |filter|
+            path.delete_prefix("#{root}/").include?(filter)
+          end
+        end
+      end
+      files &= changed_files(root) if changed
+      files
+    end
+
+    # Validates directory roots and combines them with explicit paths.
+    #
+    # @param root [String] absolute project directory
+    # @param source_roots [Array<String>] explicit source directories
+    # @param existing [Array<String>] existing positional paths
+    # @return [Array<String>] expanded roots, defaulting to the project directory
+    def self.selection_roots(root, source_roots, existing)
       roots = source_roots.map do |path|
         directory = File.expand_path(path, root)
         raise Error, "#{path}: source root must be a directory" unless File.directory?(directory)
@@ -30,11 +51,7 @@ module Crap4Ruby
       end
       roots.concat(existing.map { |path| File.expand_path(path, root) })
       roots << root if roots.empty?
-      files = roots.flat_map { |path| File.file?(path) ? [path] : walk(path) }
-      files = files.select { |path| File.extname(path) == ".rb" }.map { |path| File.realpath(path) }.uniq.sort
-      files.select! { |path| filters.any? { |filter| path.delete_prefix("#{root}/").include?(filter) } } unless filters.empty?
-      files &= changed_files(root) if changed
-      files
+      roots
     end
 
     # Walks a directory without following symlinks or entering excluded directories.

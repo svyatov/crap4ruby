@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # @type self: Steep::Project::DSL
 target :library do
   check "lib", "exe/*"

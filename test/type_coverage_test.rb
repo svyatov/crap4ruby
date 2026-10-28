@@ -26,6 +26,7 @@ class TypeCoverageTest < Minitest::Test
 
   def test_rejects_missing_extra_and_duplicate_files
     row = ["success", 1, 0, 1, 100]
+
     refute_empty TypeCoverage.failures(stats, ["lib/example.rb"])
     refute_empty TypeCoverage.failures(stats(row), [])
     refute_empty TypeCoverage.failures(stats(row, row), ["lib/example.rb"])
