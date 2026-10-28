@@ -25,7 +25,7 @@ module Crap4Ruby
     end
 
     def self.walk(root)
-      paths = []
+      paths = [] #: Array[String]
       Find.find(root) do |path|
         name = File.basename(path)
         if File.directory?(path)
@@ -48,7 +48,7 @@ module Crap4Ruby
       top = git(root, "rev-parse", "--show-toplevel").chomp
       git(root, "status", "--porcelain=v1", "-z", "--no-renames", "--untracked-files=all", "--", ".")
         .split("\0").filter_map do |entry|
-          path = File.join(top, entry[3..])
+          path = File.join(top, entry[3..].to_s)
           File.realpath(path) if File.file?(path)
         end
     end

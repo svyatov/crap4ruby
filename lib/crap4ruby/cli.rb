@@ -36,17 +36,31 @@ module Crap4Ruby
     private
 
     def parse_options(arguments)
+      # @type var options: options
       options = {root: Dir.pwd, source_roots: [], changed: false, coverage: "coverage/.resultset.json"}
       parser = OptionParser.new do |cli|
         cli.banner = "Usage: crap4ruby [options] [file-or-directory-or-filter ...]"
-        cli.on("--root PATH", "Project root (default: current directory)") { |path| options[:root] = path }
-        cli.on("--source-root PATH", "Analyze this directory; repeat for multiple roots") { |path| options[:source_roots] << path }
+        cli.on("--root PATH", "Project root (default: current directory)") do |path|
+          # @type var path: String
+          options[:root] = path
+        end
+        cli.on("--source-root PATH", "Analyze this directory; repeat for multiple roots") do |path|
+          # @type var path: String
+          options[:source_roots] << path
+        end
         cli.on("--changed", "Analyze Git additions and edits, including untracked files") { options[:changed] = true }
-        cli.on("--coverage PATH", "SimpleCov resultset (default: coverage/.resultset.json)") { |path| options[:coverage] = path }
+        cli.on("--coverage PATH", "SimpleCov resultset (default: coverage/.resultset.json)") do |path|
+          # @type var path: String
+          options[:coverage] = path
+        end
         cli.on("--no-coverage", "Complexity only; coverage and CRAP are N/A") { options[:no_coverage] = true }
         cli.on("--use-existing-coverage", "Read reports without running tests (the default)") { options[:existing] = true }
-        cli.on("--coverage-command COMMAND", "Run a shell command that refreshes the resultset") { |command| options[:command] = command }
+        cli.on("--coverage-command COMMAND", "Run a shell command that refreshes the resultset") do |command|
+          # @type var command: String
+          options[:command] = command
+        end
         cli.on("--threshold NUMBER", "Exit 2 when CRAP exceeds this value") do |value|
+          # @type var value: String
           number = Float(value)
           raise OptionParser::InvalidArgument, "threshold must be finite and nonnegative" unless number.finite? && number >= 0
 

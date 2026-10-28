@@ -50,7 +50,9 @@ module Crap4Ruby
         ancestor = scope.rindex(name) unless declaration
         ancestor ? scope.take(ancestor + 1) : scope + [name]
       when Prism::ConstantPathNode
-        (node.parent ? qualify(node.parent, scope) : [])&.+([node.name.to_s])
+        # @type var parent: Array[String]?
+        parent = node.parent ? qualify(node.parent, scope) : []
+        parent&.+([node.name.to_s])
       end
     end
 
@@ -62,7 +64,12 @@ module Crap4Ruby
         :when_node, :in_node, :rescue_node, :rescue_modifier_node, :and_node, :or_node].include?(node.type) ||
         node.type.to_s.match?(/_(?:and|or)_write_node\z/)
       count = decision ? 1 : 0
-      count += 1 if node.respond_to?(:safe_navigation?) && node.safe_navigation?
+      case node
+      when Prism::CallNode, Prism::CallAndWriteNode, Prism::CallOrWriteNode,
+          Prism::CallOperatorWriteNode, Prism::CallTargetNode, Prism::IndexAndWriteNode,
+          Prism::IndexOrWriteNode, Prism::IndexOperatorWriteNode, Prism::IndexTargetNode
+        count += 1 if node.safe_navigation?
+      end
       count + node.compact_child_nodes.sum { |child| decisions(child) }
     end
 
@@ -74,7 +81,7 @@ module Crap4Ruby
       return [] unless node
 
       lines = (node.location.start_line..node.location.end_line).to_a
-      excluded = []
+      excluded = [] #: Array[Integer]
       collect_boundaries(node, excluded)
       lines - excluded
     end

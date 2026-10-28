@@ -1,0 +1,8 @@
+dependencies:
+  - name: prism
+  - name: json
+  - name: optparse
+  - name: find
+  - name: open3
+  - name: fileutils
+  - name: tempfile

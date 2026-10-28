@@ -4,7 +4,8 @@ require "prism"
 require_relative "crap4ruby/version"
 
 module Crap4Ruby
-  Error = Class.new(StandardError)
+  class Error < StandardError
+  end
   MethodInfo = Data.define(:name, :namespace, :complexity, :lines, :path)
   Entry = Data.define(:name, :namespace, :complexity, :coverage, :crap, :path)
 end

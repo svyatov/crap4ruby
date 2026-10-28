@@ -5,7 +5,7 @@ require_relative "../lib/crap4ruby/version"
 tag = ARGV.fetch(0)
 abort "Tag #{tag} does not match version #{Crap4Ruby::VERSION}" unless tag == "v#{Crap4Ruby::VERSION}"
 
-changelog = File.read(File.expand_path("../CHANGELOG.md", __dir__))
+changelog = File.read(File.expand_path("../CHANGELOG.md", File.dirname(__FILE__)))
 section = changelog.split(/^## /).find { |entry| entry.start_with?("[#{Crap4Ruby::VERSION}] - ") }
 abort "Missing changelog entry for #{tag}" unless section
 
