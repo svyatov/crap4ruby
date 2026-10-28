@@ -12,14 +12,24 @@ bin/setup
 bundle exec rake
 ```
 
-Before each commit, hooks scan staged changes for secrets and whitespace errors.
+Before each commit, hooks run Ruby lint checks and scan staged changes for secrets and whitespace errors.
 Commit messages must use Conventional Commits.
 Before each push, hooks run `bundle exec rake`.
 Put machine-specific hook settings in the ignored `lefthook-local.yml` file.
 
-The default check runs Steep, requires 100% typed calls across every Ruby file, runs tests with fresh SimpleCov coverage, and validates YARD documentation.
+The default check, also available as `bundle exec rake check`, runs RuboCop, Steep, tests with fresh SimpleCov coverage, YARD validation, and dependency audits.
+Every Ruby file must have 100% typed calls.
 Every library method's CRAP score must be at most 10.
 Use `bundle exec rake test` for tests alone. Open `coverage/index.html` to inspect line coverage.
+
+Run `bundle exec rake lint` to check Ruby style, formatting, performance, Minitest assertions, and Rake tasks.
+Run `bundle exec rake format` to apply RuboCop's safe corrections, then review the diff.
+RuboCop targets Ruby 3.3 and preserves the project's double-quoted strings and compact hashes.
+YARD and CRAP enforce documentation and complexity requirements; RuboCop's overlapping documentation and metrics checks are disabled.
+
+Run `bundle exec rake audit` to check both the development and release lockfiles for known vulnerabilities and insecure gem sources.
+The audit updates RubySec's advisory database over the network and stores it in the ignored `.cache/` directory.
+The default check and pre-push hook therefore require network access.
 
 Run `bundle exec rake types` for type checks alone.
 Keep library signatures in `sig/` and signatures for tests and development tools in `sig-development/`.

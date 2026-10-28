@@ -9,6 +9,7 @@ module Minitest
     def refute_includes: [T] (String | Array[T] collection, String | T value) -> true
     def assert_empty: (String | Array[Object] value) -> true
     def refute_empty: (String | Array[Object] value) -> true
+    def refute_path_exists: (String path) -> true
     def assert_match: (Regexp pattern, String value) -> true
     def assert_raises: (singleton(Exception) exception) { () -> void } -> Exception
   end

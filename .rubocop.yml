@@ -1,0 +1,77 @@
+plugins:
+  - rubocop-minitest
+  - rubocop-performance
+  - rubocop-rake
+
+inherit_mode:
+  merge:
+    - Include
+
+AllCops:
+  TargetRubyVersion: 3.3
+  NewCops: enable
+  CacheRootDirectory: .cache/rubocop
+  Include:
+    - "Steepfile"
+  Exclude:
+    - ".cache/**/*"
+    - "coverage/**/*"
+    - "doc/**/*"
+    - "vendor/**/*"
+
+# YARD validates public API documentation; CRAP combines complexity and coverage.
+Style/Documentation:
+  Enabled: false
+
+Metrics:
+  Enabled: false
+
+# Keep the project's double-quoted strings and compact hashes.
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+Layout/SpaceInsideHashLiteralBraces:
+  EnforcedStyle: no_space
+
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/ArrayAlignment:
+  EnforcedStyle: with_fixed_indentation
+
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
+Naming/RescuedExceptionsVariableName:
+  PreferredName: error
+
+# Named arguments keep the public helper's YARD parameter documentation useful.
+Style/ArgumentsForwarding:
+  UseAnonymousForwarding: false
+
+# Preserve Steep's inline type declarations and narrowing casts.
+Layout/LeadingCommentSpace:
+  AllowSteepAnnotation: true
+  AllowRBSInlineAnnotation: true
+
+Lint/SelfAssignment:
+  AllowRBSInlineAnnotation: true
+
+# Direct predicate calls remain visible to Steep's type checker.
+Minitest/AssertPredicate:
+  Enabled: false
+
+Minitest/RefutePredicate:
+  Enabled: false
+
+# These score fixtures use exactly representable values; tolerance weakens them.
+Minitest/AssertInDelta:
+  Exclude:
+    - "test/coverage_test.rb"
+
+# Integration scenarios assert several parts of one observable result.
+Minitest/MultipleAssertions:
+  Enabled: false

@@ -36,7 +36,7 @@ class CLITest < Minitest::Test
 
     assert_equal 0, run_cli("--no-coverage")
     assert_includes @out.string, "CRAP Report"
-    assert_match(/pick\s+Sample\s+2\s+N\/A\s+N\/A/, @out.string)
+    assert_match(%r{pick\s+Sample\s+2\s+N/A\s+N/A}, @out.string)
     assert_includes snapshot, ':name "pick"'
     assert_includes snapshot, ":coverage nil, :crap nil"
   end
@@ -51,6 +51,75 @@ class CLITest < Minitest::Test
     assert_includes snapshot, ":coverage 50.0, :crap 2.5"
     assert_equal 2, run_cli("--coverage", "results.json", "--threshold", "2.49")
     assert_match(/threshold/i, @err.string)
+  end
+
+  def test_preserves_decimal_threshold_precision
+    write("lib/sample.rb", "def pick(x)\n value = 1\n if x\n value + 1\n else\n value - 1\n value - 2\n end\nend\n")
+    write("results.json", JSON.generate("RSpec" => {"coverage" => {
+      "lib/sample.rb" => {"lines" => [1, 1, 1, 1, nil, 0, 0, nil, nil]}
+    }}))
+
+    assert_equal 2, run_cli("--coverage", "results.json", "--threshold", "2.25599999999999999999")
+    assert_equal 0, run_cli("--coverage", "results.json", "--threshold", "2.256")
+    assert_equal 0, run_cli("--coverage", "results.json", "--threshold", "0x3")
+  end
+
+  def test_requires_unknown_scores_to_fit_the_threshold_at_zero_coverage
+    write("lib/sample.rb", "def pick(x) = x ? 1 : 0\n")
+
+    assert_equal 1, run_cli("--no-coverage", "--threshold", "5.99999999999999999999")
+    assert_includes @err.string, "Cannot verify CRAP threshold"
+    assert_includes @err.string, "Object#pick"
+    assert_includes @err.string, "maximum 6"
+    refute_includes @err.string, "threshold 6.0"
+    assert_includes snapshot, ":coverage nil, :crap nil"
+    assert_equal 0, run_cli("--no-coverage", "--threshold", "6")
+    refute_includes @err.string, "Cannot verify"
+    assert_includes snapshot, ":coverage nil, :crap nil"
+  end
+
+  def test_prioritizes_measured_violations_over_unknown_scores
+    write("lib/sample.rb", "def measured(x)\n x ? 1 : 0\nend\ndef unknown(x) = x ? 1 : 0\n")
+    write("results.json", JSON.generate("RSpec" => {"coverage" => {
+      "lib/sample.rb" => {"lines" => [1, 0, nil, 1]}
+    }}))
+
+    assert_equal 2, run_cli("--coverage", "results.json", "--threshold", "5")
+    assert_includes snapshot, ":coverage 0.0, :crap 6.0"
+    assert_includes snapshot, ":coverage nil, :crap nil"
+    assert_includes @err.string, "CRAP threshold exceeded"
+    refute_includes @err.string, "Cannot verify"
+  end
+
+  def test_rejects_unrepresentable_method_names_without_replacing_snapshot
+    write("lib/sample.rb", <<~'RUBY')
+      # encoding: ASCII-8BIT
+      define_method("\xFF") { true }
+    RUBY
+    write(".metrics/crap.edn", "previous snapshot")
+
+    assert_equal 1, run_cli("--no-coverage")
+    assert_includes @err.string, "sample.rb:2: define_method name must be representable in UTF-8"
+    assert_equal "previous snapshot", snapshot
+  end
+
+  def test_escapes_control_characters_in_literal_method_names
+    write("lib/sample.rb", 'define_method("line\nname") { true }')
+
+    assert_equal 1, run_cli("--no-coverage", "--threshold", "1")
+    assert_equal 5, @out.string.lines.size
+    assert_includes @out.string, '"line\nname"'
+    assert_equal 2, @err.string.lines.size
+    assert_includes @err.string, '"Object#line\nname"'
+    assert_includes snapshot, ':name "line\nname"'
+  end
+
+  def test_rejects_negative_thresholds_that_underflow_float_precision
+    write(".metrics/crap.edn", "previous snapshot")
+
+    assert_equal 1, run_cli("--threshold", "-1e-1000")
+    assert_includes @err.string, "threshold must be finite and nonnegative"
+    assert_equal "previous snapshot", snapshot
   end
 
   def test_discovers_source_and_prunes_tests_hidden_and_generated_trees
@@ -90,6 +159,7 @@ class CLITest < Minitest::Test
     assert_includes @err.string, "--no-coverage"
     assert_equal original, snapshot
     write("lib/sample.rb", "def broken(")
+
     assert_equal 1, run_cli("--no-coverage")
     assert_includes @err.string, "sample.rb:"
     assert_equal original, snapshot
@@ -98,11 +168,11 @@ class CLITest < Minitest::Test
   def test_help_version_invalid_options_and_empty_selection
     assert_equal 0, run_cli("--help")
     assert_includes @out.string, "--coverage-command"
-    refute File.exist?(File.join(@root, ".metrics"))
+    refute_path_exists File.join(@root, ".metrics")
     assert_equal 0, run_cli("--version")
     assert_includes @out.string, Crap4Ruby::VERSION
-    [ ["--unknown"], ["--threshold", "-1"], ["--threshold", "NaN"],
-      ["--no-coverage", "--coverage-command", "true"], ["--source-root", "missing"] ].each do |arguments|
+    [["--unknown"], ["--threshold", "-1"], ["--threshold", "NaN"],
+      ["--no-coverage", "--coverage-command", "true"], ["--source-root", "missing"]].each do |arguments|
       assert_equal 1, run_cli(*arguments), arguments.inspect
     end
     assert_equal 0, run_cli
@@ -123,6 +193,7 @@ class CLITest < Minitest::Test
     refute_includes @out.string, "test output"
     assert_includes snapshot, ":coverage 100.0, :crap 1.0"
     original = snapshot
+
     assert_equal 1, run_cli("--coverage", "result.json", "--coverage-command", "true")
     assert_match(/refresh/, @err.string)
     assert_equal original, snapshot
@@ -155,6 +226,7 @@ class CLITest < Minitest::Test
   def test_changed_outside_a_repository_fails_without_replacing_snapshot
     write("sample.rb", "def good = 1")
     write(".metrics/crap.edn", "keep")
+
     assert_equal 1, run_cli("--changed", "--no-coverage")
     assert_includes @err.string, "git:"
     assert_equal "keep", snapshot

@@ -14,7 +14,8 @@ module Crap4Ruby
     def self.load(path, root:)
       new(JSON.parse(File.read(path)), root: root)
     rescue SystemCallError => error
-      raise Error, "#{path}: cannot read coverage report; generate SimpleCov coverage or use --no-coverage (#{error.message})"
+      raise Error,
+        "#{path}: cannot read coverage report; generate SimpleCov coverage or use --no-coverage (#{error.message})"
     rescue JSON::ParserError, Error => error
       raise Error, "#{path}: invalid SimpleCov report (#{error.message})"
     end
@@ -35,27 +36,29 @@ module Crap4Ruby
     # Null and out-of-range lines do not enter the denominator.
     #
     # @param method [MethodInfo] method whose path and body lines select coverage
-    # @return [Float, nil] fraction from 0 to 1; zero for an absent file,
-    #   or nil when a reported file has no measurable body lines
+    # @return [Rational, nil] exact fraction from 0 to 1; zero for an absent file,
+    #   or nil when body lines are ambiguous or no reported lines are measurable
     def fraction(method)
+      body = method.lines
+      return nil unless body
+
       path = File.expand_path(method.path)
       path = File.realpath(path) if File.exist?(path)
       # @type var lines: Array[Integer?]?
       lines = @files[path]
-      return 0.0 unless lines
+      return Rational(0) unless lines
 
-      hits = method.lines.filter_map { |line| lines[line - 1] }
+      hits = body.filter_map { |line| lines[line - 1] }
       return nil if hits.empty?
 
-      hits.count(&:positive?).fdiv(hits.size)
+      Rational(hits.count(&:positive?), hits.size)
     end
 
     private
 
     def add_suite(suite, root)
-      unless suite.is_a?(Hash) && suite["coverage"].is_a?(Hash)
-        raise Error, "expected a coverage object for each suite"
-      end
+      raise Error, "expected a coverage object for each suite" unless suite.is_a?(Hash) && suite["coverage"].is_a?(Hash)
+
       suite["coverage"].each { |path, data| add_file(path, data, root) }
     end
 
@@ -73,6 +76,7 @@ module Crap4Ruby
       unless lines.is_a?(Array) && lines.all? { |hit| hit.nil? || (hit.is_a?(Integer) && hit >= 0) }
         raise Error, "#{path}: expected nonnegative line counts or null"
       end
+
       # Every element was validated above; Steep cannot narrow an array through all?.
       lines = lines #: Array[Integer?]
       previous = @files[key] || []

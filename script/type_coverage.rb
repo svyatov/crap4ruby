@@ -29,8 +29,10 @@ module TypeCoverage
     output, status = Open3.capture2("git", "ls-files", "--cached", "--others", "--exclude-standard", "-z")
     raise "Cannot list repository files" unless status.success?
 
+    ruby_filenames = %w[Gemfile Rakefile Steepfile]
     output.split("\0").uniq.select do |path|
-      path.match?(/\.(?:rb|rake|gemspec)\z/) || %w[Gemfile Rakefile Steepfile].include?(File.basename(path)) || path.start_with?("exe/", "bin/")
+      path.match?(/\.(?:rb|rake|gemspec)\z/) || ruby_filenames.include?(File.basename(path)) ||
+        path.start_with?("exe/", "bin/")
     end
   end
 

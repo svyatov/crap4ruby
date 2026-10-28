@@ -12,7 +12,7 @@ module Crap4Ruby
   class Error < StandardError
   end
 
-  # Immutable static analysis of one explicit method definition.
+  # Immutable static analysis of one method definition.
   MethodInfo = Data.define(:name, :namespace, :complexity, :lines, :path)
 
   # Immutable analysis result with coverage and a CRAP score.
@@ -24,9 +24,9 @@ module Crap4Ruby
   #     attr_reader :name
   #     # @return [String] lexical owner, or `Object` for a top-level method
   #     attr_reader :namespace
-  #     # @return [Integer] cyclomatic complexity, including parameter defaults
+  #     # @return [Integer] cyclomatic complexity of the body
   #     attr_reader :complexity
-  #     # @return [Array<Integer>] one-based body lines, excluding nested definitions
+  #     # @return [Array<Integer>, nil] one-based body lines, or nil when line ownership is ambiguous
   #     attr_reader :lines
   #     # @return [String] source path supplied to the analyzer
   #     attr_reader :path
@@ -40,7 +40,7 @@ module Crap4Ruby
   #     attr_reader :complexity
   #     # @return [Float, nil] percentage from 0 to 100, or nil when unmeasurable or disabled
   #     attr_reader :coverage
-  #     # @return [Float, nil] CRAP score, or nil when coverage is unknown
+  #     # @return [Rational, Float, nil] CRAP score, or nil when coverage is unknown
   #     attr_reader :crap
   #     # @return [String] source path supplied to the analyzer
   #     attr_reader :path

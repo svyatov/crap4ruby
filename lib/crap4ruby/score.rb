@@ -11,8 +11,11 @@ module Crap4Ruby
     #   when coverage is disabled or the method has no measurable lines
     def self.call(method, coverage)
       fraction = coverage&.fraction(method)
-      crap = method.complexity * method.complexity * (1 - fraction)**3 + method.complexity if fraction
-      Entry.new(method.name, method.namespace, method.complexity, fraction && fraction * 100, crap, method.path)
+      if fraction
+        uncovered = 1 - fraction
+        crap = (method.complexity * method.complexity * uncovered * uncovered * uncovered) + method.complexity
+      end
+      Entry.new(method.name, method.namespace, method.complexity, fraction && (fraction * 100).to_f, crap, method.path)
     end
   end
 end

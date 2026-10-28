@@ -1,4 +1,5 @@
 /.bundle/
+/.cache/
 /pkg/
 /coverage/
 /doc/

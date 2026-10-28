@@ -7,7 +7,8 @@ Gem::Specification.new do |spec|
   spec.version = Crap4Ruby::VERSION
   spec.authors = ["Leonid Svyatov"]
   spec.summary = "CRAP scores for Ruby methods using Prism and SimpleCov reports"
-  spec.description = "Static Ruby method complexity and test coverage combined into CRAP scores and crapper-compatible snapshots."
+  spec.description = "Static Ruby method complexity and test coverage combined into " \
+                     "CRAP scores and crapper-compatible snapshots."
   spec.license = "MIT"
   homepage = "https://github.com/svyatov/crap4ruby"
   spec.homepage = homepage
