@@ -12,3 +12,6 @@ end
 require_relative "crap4ruby/analyzer"
 require_relative "crap4ruby/coverage"
 require_relative "crap4ruby/score"
+require_relative "crap4ruby/report"
+require_relative "crap4ruby/discovery"
+require_relative "crap4ruby/cli"
