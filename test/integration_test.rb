@@ -5,8 +5,8 @@ require "open3"
 
 class IntegrationTest < Minitest::Test
   def test_executable_returns_usage_errors_to_the_shell
-    executable = File.expand_path("../exe/crap4ruby", __dir__)
-    library = File.expand_path("../lib", __dir__)
+    executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
+    library = File.expand_path("../lib", File.dirname(__FILE__))
     output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--unknown-option")
     assert_equal 1, status.exitstatus
     assert_empty output
@@ -36,8 +36,8 @@ class IntegrationTest < Minitest::Test
       output, error, status = Open3.capture3(RbConfig.ruby, "test.rb", chdir: root)
       assert status.success?, "#{output}\n#{error}"
 
-      executable = File.expand_path("../exe/crap4ruby", __dir__)
-      library = File.expand_path("../lib", __dir__)
+      executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
+      library = File.expand_path("../lib", File.dirname(__FILE__))
       output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, chdir: root)
       assert status.success?, "#{output}\n#{error}"
       assert_match(/uncalled\s+Sample\s+1\s+0.0%\s+2.0/, output)

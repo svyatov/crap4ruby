@@ -1,0 +1,72 @@
+# The development APIs used by this repository that do not ship RBS signatures.
+module Minitest
+  class Test
+    def assert: (Object? value, ?String message) -> true
+    def refute: (Object? value, ?String message) -> true
+    def assert_equal: (Object? expected, Object? actual, ?String message) -> true
+    def assert_nil: (Object? value) -> true
+    def assert_includes: [T] (String | Array[T] collection, String | T value) -> true
+    def refute_includes: [T] (String | Array[T] collection, String | T value) -> true
+    def assert_empty: (String | Array[Object] value) -> true
+    def refute_empty: (String | Array[Object] value) -> true
+    def assert_match: (Regexp pattern, String value) -> true
+    def assert_raises: (singleton(Exception) exception) { () -> void } -> Exception
+  end
+end
+
+module SimpleCov
+  def self.start: () { () [self: singleton(SimpleCov)] -> void } -> void
+  def self.root: (String path) -> String
+  def self.command_name: (String name) -> String
+  def self.cover: (String pattern) -> void
+end
+
+module Rake
+  module DSL
+    def task: (Symbol | Hash[Symbol, Symbol | Array[Symbol]] definition) ?{ () -> void } -> void
+    def desc: (String description) -> void
+    def ruby: (*String arguments) -> void
+    def sh: (*String arguments) -> void
+          | (Hash[String, String] environment, *String arguments) -> void
+  end
+  class TestTask
+    attr_accessor libs: Array[String]
+    attr_accessor pattern: String
+    def self.new: (Hash[Symbol, Symbol] prerequisites) { (TestTask task) -> void } -> instance
+  end
+end
+
+module Bundler
+  VERSION: String
+  class LockfileParser
+    def bundler_version: () -> Gem::Version
+  end
+  def self.locked_gems: () -> LockfileParser
+  def self.with_unbundled_env: () { () -> void } -> void
+end
+
+module Bundler::Dsl
+  def source: (String uri) -> void
+  def gemspec: () -> void
+  def group: (Symbol name) { () -> void } -> void
+  def gem: (String name, String version, ?require: bool) -> void
+end
+
+module Steep
+  module Diagnostic
+    module Ruby
+      def self.all_error: () -> Hash[Class, Symbol?]
+    end
+  end
+  module Project
+    module DSL
+      def target: (Symbol name) { () [self: TargetDSL] -> void } -> void
+      class TargetDSL
+        def check: (*String patterns) -> void
+        def signature: (*String paths) -> void
+        def library: (*String names) -> void
+        def configure_code_diagnostics: (Hash[Class, Symbol?] config) -> void
+      end
+    end
+  end
+end

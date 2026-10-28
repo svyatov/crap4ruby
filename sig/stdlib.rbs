@@ -1,0 +1,10 @@
+# Complete the stdlib signatures for the subprocess options used here.
+module Open3
+  def self.popen2e: [T] (*String command, chdir: String) { (IO input, IO output, Process::Waiter process) -> T } -> T
+  def self.capture3: (*String command, chdir: String) -> [String, String, Process::Status]
+                  | ...
+end
+
+class Process::Waiter
+  def value: () -> Process::Status
+end

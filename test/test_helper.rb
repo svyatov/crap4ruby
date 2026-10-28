@@ -3,7 +3,7 @@
 require "simplecov"
 
 SimpleCov.start do
-  root File.expand_path("..", __dir__)
+  root File.expand_path("..", File.dirname(__FILE__))
   command_name "crap4ruby tests"
   cover "lib/**/*.rb"
 end

@@ -1,0 +1,96 @@
+module Crap4Ruby
+  VERSION: String
+
+  class Error < StandardError
+  end
+
+  class MethodInfo < Data
+    attr_reader name: String
+    attr_reader namespace: String
+    attr_reader complexity: Integer
+    attr_reader lines: Array[Integer]
+    attr_reader path: String
+    def self.new: (String name, String namespace, Integer complexity, Array[Integer] lines, String path) -> instance
+                | (name: String, namespace: String, complexity: Integer, lines: Array[Integer], path: String) -> instance
+    alias self.[] self.new
+    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?lines: Array[Integer], ?path: String) -> instance
+  end
+
+  class Entry < Data
+    attr_reader name: String
+    attr_reader namespace: String
+    attr_reader complexity: Integer
+    attr_reader coverage: Float?
+    attr_reader crap: Float?
+    attr_reader path: String
+    def self.new: (String name, String namespace, Integer complexity, Float? coverage, Float? crap, String path) -> instance
+                | (name: String, namespace: String, complexity: Integer, coverage: Float?, crap: Float?, path: String) -> instance
+    alias self.[] self.new
+    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?coverage: Float?, ?crap: Float?, ?path: String) -> instance
+  end
+
+  class Analyzer
+    def call: (String source, path: String) -> Array[MethodInfo]
+    private
+    def discover: (Prism::Node? node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
+    def discover_method: (Prism::DefNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
+    def qualify: (Prism::Node? node, Array[String] scope, ?declaration: bool) -> Array[String]?
+    def decisions: (Prism::Node? node) -> Integer
+    def boundary?: (Prism::Node node) -> bool
+    def body_lines: (Prism::Node? node) -> Array[Integer]
+    def collect_boundaries: (Prism::Node node, Array[Integer] excluded) -> void
+  end
+
+  type json = nil | bool | Integer | Float | String | Array[json] | Hash[String, json]
+
+  class Coverage
+    @files: Hash[String, Array[Integer?]]
+    def self.load: (String path, root: String) -> Coverage
+    def initialize: (json suites, root: String) -> void
+    def fraction: (MethodInfo method) -> Float?
+    private
+    def add_suite: (json suite, String root) -> void
+    def add_file: (String path, json data, String root) -> void
+  end
+
+  module Discovery
+    EXCLUDED: Array[String]
+    def self.call: (root: String, source_roots: Array[String], paths: Array[String], changed: bool) -> Array[String]
+    def self.walk: (String root) -> Array[String]
+    def self.git: (String root, *String arguments) -> String
+    def self.changed_files: (String root) -> Array[String]
+  end
+
+  module Score
+    def self.call: (MethodInfo method, Coverage? coverage) -> Entry
+  end
+
+  module Report
+    def self.sorted: (Array[Entry] entries) -> Array[Entry]
+    def self.table: (Array[Entry] entries) -> String
+    def self.edn: (Array[Entry] entries) -> String
+    def self.number: (Float? value) -> String
+    def self.write: (Array[Entry] entries, root: String) -> String
+  end
+
+  interface _Output
+    def puts: (*String | OptionParser objects) -> nil
+    def write: (String text) -> Integer
+  end
+
+  class CLI
+    type options = { root: String, source_roots: Array[String], changed: bool, coverage: String,
+      ?help: bool, ?version: bool, ?no_coverage: bool, ?existing: bool, ?command: String, ?threshold: Float }
+    @stdout: _Output
+    @stderr: _Output
+    def initialize: (?stdout: _Output, ?stderr: _Output) -> void
+    def run: (Array[String] arguments) -> Integer
+    private
+    def parse_options: (Array[String] arguments) -> [options, OptionParser, Array[String]]
+    def validate_options: (options options) -> void
+    def threshold_status: (Array[Entry] entries, Float? threshold) -> Integer
+    def load_coverage: (options options, String root) -> Coverage
+    def run_coverage: (String command, String root, String report) -> void
+    def report_stamp: (String path) -> [Integer, Time, Time, Integer]?
+  end
+end

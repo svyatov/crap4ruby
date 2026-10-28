@@ -1,0 +1,14 @@
+module TypeCoverage
+  HEADER: Array[String]
+  def self.failures: (String csv, Array[String] sources) -> Array[String]
+  def self.sources: () -> Array[String]
+  def self.run: () -> Integer
+end
+
+class TypeCoverageTest < Minitest::Test
+  def stats: (*Array[String | Integer] rows) -> String
+  def test_accepts_fully_typed_files_including_files_without_calls: () -> void
+  def test_rejects_untyped_failed_and_partially_typed_files: () -> void
+  def test_rejects_missing_extra_and_duplicate_files: () -> void
+  def test_rejects_invalid_stats_output: () -> void
+end

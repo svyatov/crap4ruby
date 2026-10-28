@@ -22,6 +22,7 @@ module Crap4Ruby
     def fraction(method)
       path = File.expand_path(method.path)
       path = File.realpath(path) if File.exist?(path)
+      # @type var lines: Array[Integer?]?
       lines = @files[path]
       return 0.0 unless lines
 
@@ -47,6 +48,8 @@ module Crap4Ruby
       unless lines.is_a?(Array) && lines.all? { |hit| hit.nil? || (hit.is_a?(Integer) && hit >= 0) }
         raise Error, "#{path}: expected nonnegative line counts or null"
       end
+      # Every element was validated above; Steep cannot narrow an array through all?.
+      lines = lines #: Array[Integer?]
       previous = @files[key] || []
       @files[key] = Array.new([previous.size, lines.size].max) do |index|
         [previous[index], lines[index]].compact.max

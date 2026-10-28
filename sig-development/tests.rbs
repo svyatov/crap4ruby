@@ -1,0 +1,58 @@
+class AnalyzerTest < Minitest::Test
+  def analyze: (String source) -> Array[Crap4Ruby::MethodInfo]
+  def test_finds_a_method_without_executing_source: () -> void
+  def test_resolves_namespaces_and_singleton_methods: () -> void
+  def test_counts_decisions_inside_blocks_and_lambdas: () -> void
+  def test_counts_loop_case_pattern_and_rescue_decisions: () -> void
+  def test_separates_nested_methods_and_excludes_their_coverage_lines: () -> void
+  def test_rejects_invalid_source_with_its_location: () -> void
+  def test_ignores_keywords_in_comments_and_strings_and_handles_empty_methods: () -> void
+  def test_counts_safe_navigation_in_compound_assignments: () -> void
+  def test_resolves_constant_singleton_classes_and_qualified_self_references: () -> void
+  def test_counts_decisions_in_parameter_defaults: () -> void
+  def test_skips_dynamic_namespace_subtrees_without_executing_them: () -> void
+end
+
+class CLITest < Minitest::Test
+  @root: String
+  @out: StringIO
+  @err: StringIO
+  def setup: () -> void
+  def teardown: () -> void
+  def write: (String path, String content) -> String
+  def run_cli: (*String arguments) -> Integer
+  def snapshot: () -> String
+  def git: (*String arguments) -> void
+  def test_writes_complexity_only_table_and_snapshot: () -> void
+  def test_reads_coverage_and_compares_unrounded_scores: () -> void
+  def test_discovers_source_and_prunes_tests_hidden_and_generated_trees: () -> void
+  def test_combines_source_roots_paths_and_fragment_filters_without_duplicates: () -> void
+  def test_errors_preserve_previous_snapshot: () -> void
+  def test_help_version_invalid_options_and_empty_selection: () -> void
+  def test_coverage_command_must_succeed_and_refresh_its_report: () -> void
+  def test_changed_files_include_staged_unstaged_untracked_and_renamed_paths: () -> void
+  def test_changed_outside_a_repository_fails_without_replacing_snapshot: () -> void
+end
+
+class CoverageTest < Minitest::Test
+  def in_project: () { (String root, String report) -> void } -> void
+  def test_scores_only_body_lines_from_simplecov: () -> void
+  def test_merges_legacy_and_current_suites_by_covered_line_union: () -> void
+  def test_distinguishes_missing_methods_unmeasurable_methods_and_disabled_coverage: () -> void
+  def test_rejects_missing_and_malformed_reports_with_actionable_errors: () -> void
+end
+
+class CoverageSetupTest < Minitest::Test
+  def test_collects_coverage_while_tests_execute: () -> void
+end
+
+class ReportTest < Minitest::Test
+  def entry: (String name, Float? score, ?String path) -> Crap4Ruby::Entry
+  def test_orders_scores_before_unknowns_and_breaks_ties_deterministically: () -> void
+  def test_writes_the_exact_edn_shape_with_escaped_strings_and_precise_scores: () -> void
+end
+
+class IntegrationTest < Minitest::Test
+  def test_executable_returns_usage_errors_to_the_shell: () -> void
+  def test_real_simplecov_result_distinguishes_loaded_and_called_methods: () -> void
+end

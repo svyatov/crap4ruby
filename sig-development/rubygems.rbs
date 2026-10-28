@@ -1,0 +1,19 @@
+module Gem
+  class Specification
+    def self.new: () { (Specification spec) -> void } -> instance
+    attr_writer name: String
+    attr_writer version: String
+    attr_writer authors: Array[String]
+    attr_writer summary: String
+    attr_writer description: String
+    attr_writer license: String
+    attr_writer homepage: String
+    attr_writer metadata: Hash[String, String]
+    attr_writer required_ruby_version: String
+    attr_writer files: Array[String]
+    attr_writer require_paths: Array[String]
+    attr_writer bindir: String
+    attr_writer executables: Array[String]
+    def add_dependency: (String name, *String requirements) -> void
+  end
+end

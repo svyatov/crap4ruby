@@ -11,8 +11,14 @@ bundle install
 bundle exec rake
 ```
 
-The default check runs tests with fresh SimpleCov coverage and requires every library method's CRAP score to be at most 10.
+The default check runs Steep, requires 100% typed calls across every Ruby file, and runs tests with fresh SimpleCov coverage.
+Every library method's CRAP score must be at most 10.
 Use `bundle exec rake test` for tests alone. Open `coverage/index.html` to inspect line coverage.
+
+Run `bundle exec rake types` for type checks alone.
+Keep library signatures in `sig/` and signatures for tests and development tools in `sig-development/`.
+The type gate rejects unchecked Ruby files, untyped signatures, and any call that Steep cannot type.
+Add new source locations to `Steepfile` when the gate reports an unchecked file.
 
 After changing dependencies, use Ruby 3.3 and the Bundler version recorded in `Gemfile.lock`.
 Run `bundle exec rake lock` to refresh both lockfiles and their checksums.
