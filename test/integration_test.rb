@@ -4,6 +4,15 @@ require_relative "test_helper"
 require "open3"
 
 class IntegrationTest < Minitest::Test
+  def test_executable_returns_usage_errors_to_the_shell
+    executable = File.expand_path("../exe/crap4ruby", __dir__)
+    library = File.expand_path("../lib", __dir__)
+    output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--unknown-option")
+    assert_equal 1, status.exitstatus
+    assert_empty output
+    assert_includes error, "invalid option"
+  end
+
   def test_real_simplecov_result_distinguishes_loaded_and_called_methods
     Dir.mktmpdir("crap4ruby-integration") do |root|
       FileUtils.mkdir_p(File.join(root, "lib"))
