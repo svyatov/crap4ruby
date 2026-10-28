@@ -104,4 +104,72 @@ class AnalyzerTest < Minitest::Test
     error = assert_raises(Crap4Ruby::Error) { analyze("def broken(\n") }
     assert_match(/lib\/sample\.rb:\d+/, error.message)
   end
+
+  def test_ignores_keywords_in_comments_and_strings_and_handles_empty_methods
+    methods = analyze(<<~RUBY)
+      # if while rescue
+      def message = "if && || rescue for"
+      def empty
+      end
+      def select(value)
+        if value
+          1
+        elsif !value
+          2
+        else
+          3
+        end
+        value unless value.nil?
+        value and false or true
+      end
+    RUBY
+
+    assert_equal [1, 1, 6], methods.map(&:complexity)
+    assert_equal [], methods[1].lines
+  end
+
+  def test_counts_safe_navigation_in_compound_assignments
+    method = analyze("def update(object)\n object&.value ||= 1\nend").first
+    assert_equal 3, method.complexity
+  end
+
+  def test_resolves_constant_singleton_classes_and_qualified_self_references
+    methods = analyze(<<~RUBY)
+      class Widget; end
+      class << Widget
+        def build = true
+      end
+      module Shop
+        class Shop::Order
+          def Order.find = true
+        end
+        class Shop
+          def nested = true
+        end
+      end
+    RUBY
+
+    assert_equal [["self.build", "Widget"], ["self.find", "Shop::Order"], ["nested", "Shop::Shop"]],
+      methods.map { |method| [method.name, method.namespace] }
+  end
+
+  def test_counts_decisions_in_parameter_defaults
+    method = analyze("def choose(value = flag ? 1 : 2)\n value\nend").first
+    assert_equal 2, method.complexity
+    assert_equal [2], method.lines
+  end
+
+  def test_skips_dynamic_namespace_subtrees_without_executing_them
+    methods = analyze(<<~RUBY)
+      class factory::Thing
+        class Child
+          def hidden = true
+        end
+      end
+      class Known
+        def visible = true
+      end
+    RUBY
+    assert_equal ["visible"], methods.map(&:name)
+  end
 end

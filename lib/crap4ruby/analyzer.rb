@@ -16,28 +16,33 @@ module Crap4Ruby
     def discover(node, scope, singleton, path)
       case node
       when Prism::ClassNode, Prism::ModuleNode
-        discover(node.body, qualify(node.constant_path, scope), false, path)
+        owner = qualify(node.constant_path, scope, declaration: true)
+        owner ? discover(node.body, owner, false, path) : []
       when Prism::SingletonClassNode
-        node.expression.is_a?(Prism::SelfNode) ? discover(node.body, scope, true, path) : []
+        owner = node.expression.is_a?(Prism::SelfNode) ? scope : qualify(node.expression, scope)
+        owner ? discover(node.body, owner, true, path) : []
       when Prism::DefNode
         owner = node.receiver && !node.receiver.is_a?(Prism::SelfNode) ? qualify(node.receiver, scope) : scope
         return [] unless owner
 
         name = "#{'self.' if singleton || node.receiver}#{node.name}"
         lines = body_lines(node.body)
-        [MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), 1 + decisions(node.body), lines, path)] +
+        complexity = 1 + decisions(node.parameters) + decisions(node.body)
+        [MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), complexity, lines, path)] +
           discover(node.body, scope, singleton, path)
       else
         node ? node.compact_child_nodes.flat_map { |child| discover(child, scope, singleton, path) } : []
       end
     end
 
-    def qualify(node, scope)
+    def qualify(node, scope, declaration: false)
       case node
       when Prism::ParenthesesNode
         qualify(node.body, scope)
       when Prism::ConstantReadNode
-        scope + [node.name.to_s]
+        name = node.name.to_s
+        ancestor = scope.rindex(name) unless declaration
+        ancestor ? scope.take(ancestor + 1) : scope + [name]
       when Prism::ConstantPathNode
         (node.parent ? qualify(node.parent, scope) : [])&.+([node.name.to_s])
       end
@@ -49,9 +54,10 @@ module Crap4Ruby
 
       decision = [:if_node, :unless_node, :while_node, :until_node, :for_node,
         :when_node, :in_node, :rescue_node, :rescue_modifier_node, :and_node, :or_node].include?(node.type) ||
-        node.type.to_s.match?(/_(?:and|or)_write_node\z/) ||
-        (node.is_a?(Prism::CallNode) && node.safe_navigation?)
-      (decision ? 1 : 0) + node.compact_child_nodes.sum { |child| decisions(child) }
+        node.type.to_s.match?(/_(?:and|or)_write_node\z/)
+      count = decision ? 1 : 0
+      count += 1 if node.respond_to?(:safe_navigation?) && node.safe_navigation?
+      count + node.compact_child_nodes.sum { |child| decisions(child) }
     end
 
     def boundary?(node)
