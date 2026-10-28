@@ -2,6 +2,7 @@
 
 require "rake/testtask"
 require "bundler"
+require "open3"
 
 # @type self: Rake::DSL
 
@@ -25,7 +26,25 @@ task :types do
   ruby "script/type_coverage.rb"
 end
 
-task default: [:types, :crap]
+desc "Generate the YARD maintainer reference in doc/"
+task :docs do
+  sh "bundle", "exec", "yard", "doc"
+end
+
+desc "Check YARD syntax and require documentation for public library methods"
+task :"docs:check" do
+  sh "bundle", "exec", "yard", "doc", "--no-output"
+  # YARD synthesizes reader descriptions; require source comments and explicit return types.
+  query = "object.type == :method && object.visibility == :public && " \
+    "(object.docstring.blank? || (object.is_attribute? && " \
+    "(object.docstring.line_range.nil? || !object.tag(:return)&.types&.any?)))"
+  output, status = Open3.capture2("bundle", "exec", "yard", "doc", "--list",
+    "--query", query)
+  abort "YARD documentation check failed" unless status.success?
+  abort "Public methods or readers need YARD documentation and reader return types:\n#{output}" unless output.strip.empty?
+end
+
+task default: [:types, :crap, :"docs:check"]
 
 desc "Refresh dependency locks and checksums for tests and release tools"
 task :lock do

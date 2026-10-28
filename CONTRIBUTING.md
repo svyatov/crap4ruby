@@ -17,7 +17,7 @@ Commit messages must use Conventional Commits.
 Before each push, hooks run `bundle exec rake`.
 Put machine-specific hook settings in the ignored `lefthook-local.yml` file.
 
-The default check runs Steep, requires 100% typed calls across every Ruby file, and runs tests with fresh SimpleCov coverage.
+The default check runs Steep, requires 100% typed calls across every Ruby file, runs tests with fresh SimpleCov coverage, and validates YARD documentation.
 Every library method's CRAP score must be at most 10.
 Use `bundle exec rake test` for tests alone. Open `coverage/index.html` to inspect line coverage.
 
@@ -25,6 +25,15 @@ Run `bundle exec rake types` for type checks alone.
 Keep library signatures in `sig/` and signatures for tests and development tools in `sig-development/`.
 The type gate rejects unchecked Ruby files, untyped signatures, and any call that Steep cannot type.
 Add new source locations to `Steepfile` when the gate reports an unchecked file.
+
+Document public library methods and data readers with YARD summaries, parameter types, return types, and relevant exceptions.
+Explain private methods when their constraints or side effects need context.
+Keep types consistent with `sig/` and include examples when they clarify usage.
+The Ruby reference is for maintainers and does not extend the [public compatibility policy](VERSIONING.md).
+
+Run `bundle exec rake docs` to generate the reference, including private methods, then open `doc/index.html`.
+Run `bundle exec rake docs:check` to reject YARD warnings, undocumented public methods, and readers without explicit documentation and return types.
+Generated files in `doc/` and `.yardoc/` are ignored.
 
 After changing dependencies, use Ruby 3.3 and the Bundler version recorded in `Gemfile.lock`.
 Run `bundle exec rake lock` to refresh both lockfiles and their checksums.
