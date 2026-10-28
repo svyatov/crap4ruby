@@ -6,6 +6,9 @@ require_relative "crap4ruby/version"
 module Crap4Ruby
   Error = Class.new(StandardError)
   MethodInfo = Data.define(:name, :namespace, :complexity, :lines, :path)
+  Entry = Data.define(:name, :namespace, :complexity, :coverage, :crap, :path)
 end
 
 require_relative "crap4ruby/analyzer"
+require_relative "crap4ruby/coverage"
+require_relative "crap4ruby/score"
