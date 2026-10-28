@@ -1,6 +1,13 @@
 # Changelog
 
+All notable changes are recorded here using [Keep a Changelog 2.0.0](https://keepachangelog.com/en/2.0.0/).
+Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) as defined in the [versioning policy](VERSIONING.md).
+
 ## [Unreleased]
+
+### Changed
+
+- Document single-file analysis, contribution and private reporting policies, and the public compatibility policy.
 
 ## [0.1.0] - 2026-10-28
 
