@@ -33,3 +33,21 @@ jobs:
           bundler-cache: false
       - run: bundle install
       - run: bundle exec rake
+
+  release-tools:
+    name: Release tools
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BUNDLE_GEMFILE: gemfiles/release/Gemfile
+      BUNDLE_FROZEN: 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1
+        with:
+          ruby-version: '4.0.9'
+          bundler-cache: false
+      - run: bundle install
+      - run: bundle exec sigstore-cli help verify

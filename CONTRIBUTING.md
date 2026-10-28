@@ -14,6 +14,10 @@ bundle exec rake
 The default check runs tests with fresh SimpleCov coverage and requires every library method's CRAP score to be at most 10.
 Use `bundle exec rake test` for tests alone. Open `coverage/index.html` to inspect line coverage.
 
+After changing dependencies, use Ruby 3.3 and the Bundler version recorded in `Gemfile.lock`.
+Run `bundle exec rake lock` to refresh both lockfiles and their checksums.
+CI installs the release tools from `gemfiles/release/Gemfile.lock` in frozen mode.
+
 Add a regression test for a behavior change. Use temporary projects for filesystem, Git, coverage, and CLI tests.
 Keep analyzed code out of the tool's process. Preserve the previous snapshot when analysis fails.
 

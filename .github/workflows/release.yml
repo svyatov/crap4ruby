@@ -64,7 +64,13 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    env:
+      BUNDLE_GEMFILE: gemfiles/release/Gemfile
+      BUNDLE_FROZEN: 'true'
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: built-gem
@@ -74,10 +80,10 @@ jobs:
           ruby-version: '4.0.9'
           bundler-cache: false
       - name: Install signing client
-        run: gem install sigstore-cli --version 0.2.3 --no-document
+        run: bundle install
       - uses: rubygems/configure-rubygems-credentials@f5a32efa94076b80b28556b2d3b04cb3707b6df1 # main
       - name: Sign the built gem
-        run: sigstore-cli sign pkg/crap4ruby.gem --bundle pkg/crap4ruby.gem.sigstore.json
+        run: bundle exec sigstore-cli sign pkg/crap4ruby.gem --bundle pkg/crap4ruby.gem.sigstore.json
       - name: Publish with attestation
         run: gem push pkg/crap4ruby.gem --attestation pkg/crap4ruby.gem.sigstore.json
 
