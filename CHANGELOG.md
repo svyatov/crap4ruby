@@ -8,6 +8,7 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 ### Changed
 
 - Document single-file analysis, contribution and private reporting policies, and the public compatibility policy.
+- Add a YARD maintainer reference and link to gem documentation from RubyGems metadata.
 
 ## [0.1.0] - 2026-10-28
 
