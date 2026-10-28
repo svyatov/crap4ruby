@@ -14,6 +14,8 @@ module Crap4Ruby
     private
 
     def discover(node, scope, singleton, path)
+      return [] unless node
+
       case node
       when Prism::ClassNode, Prism::ModuleNode
         owner = qualify(node.constant_path, scope, declaration: true)
@@ -22,17 +24,21 @@ module Crap4Ruby
         owner = node.expression.is_a?(Prism::SelfNode) ? scope : qualify(node.expression, scope)
         owner ? discover(node.body, owner, true, path) : []
       when Prism::DefNode
-        owner = node.receiver && !node.receiver.is_a?(Prism::SelfNode) ? qualify(node.receiver, scope) : scope
-        return [] unless owner
-
-        name = "#{'self.' if singleton || node.receiver}#{node.name}"
-        lines = body_lines(node.body)
-        complexity = 1 + decisions(node.parameters) + decisions(node.body)
-        [MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), complexity, lines, path)] +
-          discover(node.body, scope, singleton, path)
+        discover_method(node, scope, singleton, path)
       else
-        node ? node.compact_child_nodes.flat_map { |child| discover(child, scope, singleton, path) } : []
+        node.compact_child_nodes.flat_map { |child| discover(child, scope, singleton, path) }
       end
+    end
+
+    def discover_method(node, scope, singleton, path)
+      owner = node.receiver && !node.receiver.is_a?(Prism::SelfNode) ? qualify(node.receiver, scope) : scope
+      return [] unless owner
+
+      name = "#{'self.' if singleton || node.receiver}#{node.name}"
+      lines = body_lines(node.body)
+      complexity = 1 + decisions(node.parameters) + decisions(node.body)
+      [MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), complexity, lines, path)] +
+        discover(node.body, scope, singleton, path)
     end
 
     def qualify(node, scope, declaration: false)

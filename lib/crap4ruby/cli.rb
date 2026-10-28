@@ -10,6 +10,32 @@ module Crap4Ruby
     end
 
     def run(arguments)
+      options, parser, paths = parse_options(arguments)
+      return @stdout.puts(parser) || 0 if options[:help]
+      return @stdout.puts(VERSION) || 0 if options[:version]
+
+      validate_options(options)
+      root = File.realpath(options[:root])
+      raise Error, "#{root}: project root must be a directory" unless File.directory?(root)
+
+      files = Discovery.call(root: root, source_roots: options[:source_roots], paths: paths, changed: options[:changed])
+      coverage = load_coverage(options, root) unless options[:no_coverage] || files.empty?
+      entries = files.flat_map do |path|
+        Analyzer.new.call(File.binread(path), path: path).map { |method| Score.call(method, coverage) }
+      end
+      entries = Report.sorted(entries)
+      path = Report.write(entries, root: root)
+      @stdout.write(Report.table(entries))
+      @stderr.puts("Wrote #{path}")
+      threshold_status(entries, options[:threshold])
+    rescue Error, OptionParser::ParseError, SystemCallError => error
+      @stderr.puts("crap4ruby: #{error.message}")
+      1
+    end
+
+    private
+
+    def parse_options(arguments)
       options = {root: Dir.pwd, source_roots: [], changed: false, coverage: "coverage/.resultset.json"}
       parser = OptionParser.new do |cli|
         cli.banner = "Usage: crap4ruby [options] [file-or-directory-or-filter ...]"
@@ -31,37 +57,23 @@ module Crap4Ruby
         cli.on("-h", "--help", "Show help") { options[:help] = true }
         cli.on("-v", "--version", "Show version") { options[:version] = true }
       end
-      paths = parser.parse(arguments)
-      return @stdout.puts(parser) || 0 if options[:help]
-      return @stdout.puts(VERSION) || 0 if options[:version]
+      [options, parser, parser.parse(arguments)]
+    end
 
+    def validate_options(options)
       if options[:command] && (options[:no_coverage] || options[:existing])
         raise Error, "--coverage-command cannot be combined with --no-coverage or --use-existing-coverage"
       end
-      root = File.realpath(options[:root])
-      raise Error, "#{root}: project root must be a directory" unless File.directory?(root)
+    end
 
-      files = Discovery.call(root: root, source_roots: options[:source_roots], paths: paths, changed: options[:changed])
-      coverage = load_coverage(options, root) unless options[:no_coverage] || files.empty?
-      entries = files.flat_map do |path|
-        Analyzer.new.call(File.binread(path), path: path).map { |method| Score.call(method, coverage) }
-      end
-      entries = Report.sorted(entries)
-      path = Report.write(entries, root: root)
-      @stdout.write(Report.table(entries))
-      @stderr.puts("Wrote #{path}")
-      if options[:threshold] && entries.any? { |entry| entry.crap && entry.crap > options[:threshold] }
-        @stderr.puts("CRAP threshold exceeded: #{options[:threshold]}")
+    def threshold_status(entries, threshold)
+      if threshold && entries.any? { |entry| entry.crap && entry.crap > threshold }
+        @stderr.puts("CRAP threshold exceeded: #{threshold}")
         2
       else
         0
       end
-    rescue Error, OptionParser::ParseError, SystemCallError => error
-      @stderr.puts("crap4ruby: #{error.message}")
-      1
     end
-
-    private
 
     def load_coverage(options, root)
       report = File.expand_path(options[:coverage], root)

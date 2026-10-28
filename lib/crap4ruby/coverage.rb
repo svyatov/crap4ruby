@@ -16,23 +16,7 @@ module Crap4Ruby
       raise Error, "expected named test suites" unless suites.is_a?(Hash) && !suites.empty?
 
       @files = {}
-      suites.each_value do |suite|
-        unless suite.is_a?(Hash) && suite["coverage"].is_a?(Hash)
-          raise Error, "expected a coverage object for each suite"
-        end
-        suite["coverage"].each do |path, data|
-          key = File.expand_path(path, root)
-          key = File.realpath(key) if File.exist?(key)
-          lines = data.is_a?(Hash) ? data["lines"] : data
-          unless lines.is_a?(Array) && lines.all? { |hit| hit.nil? || (hit.is_a?(Integer) && hit >= 0) }
-            raise Error, "#{path}: expected nonnegative line counts or null"
-          end
-          previous = @files[key] || []
-          @files[key] = Array.new([previous.size, lines.size].max) do |index|
-            [previous[index], lines[index]].compact.max
-          end
-        end
-      end
+      suites.each_value { |suite| add_suite(suite, root) }
     end
 
     def fraction(method)
@@ -45,6 +29,28 @@ module Crap4Ruby
       return nil if hits.empty?
 
       hits.count(&:positive?).fdiv(hits.size)
+    end
+
+    private
+
+    def add_suite(suite, root)
+      unless suite.is_a?(Hash) && suite["coverage"].is_a?(Hash)
+        raise Error, "expected a coverage object for each suite"
+      end
+      suite["coverage"].each { |path, data| add_file(path, data, root) }
+    end
+
+    def add_file(path, data, root)
+      key = File.expand_path(path, root)
+      key = File.realpath(key) if File.exist?(key)
+      lines = data.is_a?(Hash) ? data["lines"] : data
+      unless lines.is_a?(Array) && lines.all? { |hit| hit.nil? || (hit.is_a?(Integer) && hit >= 0) }
+        raise Error, "#{path}: expected nonnegative line counts or null"
+      end
+      previous = @files[key] || []
+      @files[key] = Array.new([previous.size, lines.size].max) do |index|
+        [previous[index], lines[index]].compact.max
+      end
     end
   end
 end
