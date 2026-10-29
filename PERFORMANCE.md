@@ -4,19 +4,21 @@ The benchmark compares complete CLI runs on local project checkouts. It checks r
 
 ## Measured results (2026-10-29)
 
-Baseline: `19942c2` (0.2.1). Candidate: `80484fd`. Runtime: Ruby 4.0.9, Prism 1.9.0, arm64 macOS.
+Baseline: `19942c2` (0.2.1). Candidate: `2f35bdd`. Runtime: Ruby 4.0.9, Prism 1.9.0, arm64 macOS.
 
 Each variant has seven measured subprocess runs after one excluded warmup. Variant order alternates, and runs execute serially with warm filesystem caches.
 
 | Project | Mode | Ruby files | Baseline median | Candidate median | Time reduction |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Les | Complexity only | 196 | 0.2275 s | 0.1716 s | 24.5% |
-| Les | SimpleCov coverage | 196 | 0.2653 s | 0.2372 s | 10.6% |
-| Forem | Complexity only | 1,307 | 0.9097 s | 0.6313 s | 30.6% |
-| Steep | Complexity only | 146 | 0.5040 s | 0.3201 s | 36.5% |
-| YARD | Complexity only | 207 | 0.3451 s | 0.2342 s | 32.1% |
+| Les | Complexity only | 196 | 0.2307 s | 0.1698 s | 26.4% |
+| Les | SimpleCov coverage | 196 | 0.2838 s | 0.2361 s | 16.8% |
+| Forem | Complexity only | 1,307 | 0.9554 s | 0.6072 s | 36.5% |
+| Steep | Complexity only | 146 | 0.5001 s | 0.3073 s | 38.5% |
+| YARD | Complexity only | 207 | 0.3403 s | 0.2354 s | 30.8% |
 
-[Raw samples and input/output hashes](benchmark/results/2026-10-29.jsonl) retain every measured duration. Each line is a JSON object; the first contains campaign metadata.
+[Raw samples and input/output hashes](benchmark/results/2026-10-29-follow-up.jsonl) retain every measured duration. Each line is a JSON object; the first contains campaign metadata. The final four objects contain phase experiments described below.
+
+The [earlier campaign](benchmark/results/2026-10-29.jsonl) measured candidate `80484fd` against the same baseline. Project input and report hashes match across campaigns. Timing differences between campaigns do not isolate the follow-up changes.
 
 Timing includes Ruby startup, Prism activation, discovery, source reads, analysis, coverage loading, sorting, formatting, output capture, and process completion. Both variants start without inherited Bundler setup and activate the same Prism version. Runs use `--no-save`, so timing excludes snapshot serialization and writes. Test-suite execution is excluded.
 
@@ -57,4 +59,19 @@ Analysis-only comparisons against the baseline preserved complete method records
 
 Preliminary CLI timings inherited Bundler's candidate version preload and were replaced by the clean-boot measurements above. The newer Prism child iterator was excluded because the minimum supported Prism version lacks it.
 
-Remaining profiling candidates include iteration membership lookups, definition-boundary allocations, discovery, and coverage merging. The measurements above do not establish a performance maximum.
+### Follow-up experiments
+
+Seven trials per variant alternated execution order. Each trial started a separate Ruby process and ran one excluded warmup batch. Phase timing excludes library loading and result hashing. Allocation counts use `GC.stat(:total_allocated_objects)` deltas.
+
+| Experiment | Input and batch | Baseline median | Candidate median | Baseline allocated objects | Candidate allocated objects |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Iteration membership hash | Forem, one complexity-only analysis | 0.4041 s | 0.3911 s | 944,945 | 945,015 |
+| Direct definition-boundary checks | Forem, one analysis with body lines | 0.5592 s | 0.5284 s | 1,374,461 | 1,186,622 |
+| Copy initial coverage counts | Les, 50 report loads | 0.3416 s | 0.2707 s | 1,434,813 | 87,463 |
+| Skip repeated file-type checks | Forem, 20 discovery calls | 1.8376 s | 1.6761 s | 1,061,220 | 993,820 |
+
+Each phase isolates one change against its preceding implementation. Analysis includes source reads and parsing. Coverage loading includes JSON parsing, validation, and normalization. Its input is the real Les report with 209 files and 13,399 line entries. The loader experiment screened an equivalent conditional form before the committed guard clause.
+
+Complete method records, merged coverage data, and selected file paths match within every phase. Independent checks also matched 382 Analyzer fixtures, 176 coverage cases, and 40 discovery scenarios on Ruby 3.3.11 and 4.0.9. Coverage checks include caller-array mutation, merged suites, unequal arrays, and symlink aliases.
+
+Moving the iteration block check before membership lookup showed no clear gain and was reverted. Remaining profiling candidates include scoring, report formatting, and batch analysis. These measurements do not establish a performance maximum.
