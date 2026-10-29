@@ -4,7 +4,7 @@
 target :library do
   check "lib", "exe/*"
   signature "sig"
-  library "prism", "json", "optparse", "find", "open3", "fileutils", "tempfile"
+  library "prism", "json", "optparse", "find", "open3", "fileutils", "tempfile", "etc"
   configure_code_diagnostics Steep::Diagnostic::Ruby.all_error
 end
 
@@ -12,6 +12,6 @@ target :development do
   check "test", "script", "bin/*", "Rakefile", "Gemfile", "gemfiles/release/Gemfile", "crap4ruby.gemspec", "Steepfile"
   signature "sig", "sig-development"
   library "prism", "json", "optparse", "find", "open3", "fileutils", "tempfile",
-    "tmpdir", "stringio", "shellwords", "coverage", "csv", "pathname", "digest"
+    "tmpdir", "stringio", "shellwords", "coverage", "csv", "pathname", "digest", "etc", "timeout"
   configure_code_diagnostics Steep::Diagnostic::Ruby.all_error
 end

@@ -38,6 +38,28 @@ class BatchTest < Minitest::Test
   def test_batch_preserves_parse_and_filesystem_errors: () -> void
 end
 
+class BatchProcessTest < Minitest::Test
+  @root: String
+  def setup: () -> void
+  def teardown: () -> void
+  def run_program: (String program) { (String output, String error, Process::Status status) -> void } -> void
+  def pid_tracer: () -> String
+  def test_explicit_workers_preserve_order_and_run_in_children: () -> void
+  def test_automatic_workers_are_bounded_and_small_batches_stay_serial: () -> void
+  def test_multithreaded_hosts_stay_serial: () -> void
+  def test_hosts_without_fork_stay_serial: () -> void
+  def test_unimplemented_fork_stays_serial: () -> void
+  def test_analysis_errors_keep_serial_order_and_reap_children: () -> void
+  def test_parallel_coverage_matches_exact_serial_scores: () -> void
+  def test_parallel_filesystem_errors_keep_their_class: () -> void
+  def test_abnormal_worker_exit_returns_a_controlled_error: () -> void
+  def test_large_payloads_match_serial_entries_without_blocking: () -> void
+  def test_invalid_and_missing_payloads_return_controlled_errors: () -> void
+  def test_partial_start_failure_reaps_children_before_serial_fallback: () -> void
+  def test_interrupt_cancels_and_reaps_running_workers: () -> void
+  def test_child_close_failure_does_not_run_inherited_exit_hooks: () -> void
+end
+
 class CLITest < Minitest::Test
   @root: String
   @out: StringIO
