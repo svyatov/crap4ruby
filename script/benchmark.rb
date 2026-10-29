@@ -21,9 +21,10 @@ module PerformanceBenchmark
     [files.size - (coverage ? 1 : 0), fingerprint(files)]
   end
 
-  def self.measure(library, root, paths, coverage)
+  def self.measure(library, root, paths, coverage, jobs: nil)
     arguments = ["--root", root, "--no-save", *paths]
     arguments << "--no-coverage" unless coverage
+    arguments.push("--jobs", jobs) if jobs
     start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     # Gemfile evaluation preloads the candidate version. Give both copies a clean boot.
     # @type var result: [String, String, Process::Status]
@@ -53,7 +54,7 @@ module PerformanceBenchmark
         order.each do |name, library|
           raise "#{root}: inputs changed" unless inputs(root, paths, coverage) == [files, input]
 
-          seconds, output = measure(library, root, paths, coverage)
+          seconds, output = measure(library, root, paths, coverage, jobs: ENV.fetch("#{name.upcase}_JOBS", nil))
           raise "#{root}: inputs changed" unless inputs(root, paths, coverage) == [files, input]
 
           expected ||= output
@@ -86,7 +87,9 @@ module PerformanceBenchmark
       raise "#{name}: library changed" unless hashes[name] == fingerprint(Dir[File.join(path, "**/*.rb")])
     end
     puts JSON.pretty_generate(ruby: RUBY_DESCRIPTION, prism: Prism::VERSION, host: RbConfig::CONFIG["host"],
-      library_sha256: hashes, samples: samples)
+      library_sha256: hashes,
+      worker_overrides: {baseline: ENV.fetch("BASELINE_JOBS", nil), candidate: ENV.fetch("CANDIDATE_JOBS", nil)},
+      samples: samples)
     samples.reject { |row| row[:warmup] }.group_by { |row| [row[:project], row[:coverage], row[:variant]] }
            .each do |key, rows|
              times = rows.map { |row| row[:seconds] }.sort

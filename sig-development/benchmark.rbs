@@ -3,7 +3,7 @@ module PerformanceBenchmark
                   variant: String, warmup: bool, seconds: Float, output_sha256: String }
   def self.fingerprint: (Array[String] files) -> String
   def self.inputs: (String root, Array[String] paths, bool coverage) -> [Integer, String]
-  def self.measure: (String library, String root, Array[String] paths, bool coverage) -> [Float, String]
+  def self.measure: (String library, String root, Array[String] paths, bool coverage, ?jobs: String?) -> [Float, String]
   def self.project: (String root, Array[[String, String]] libraries, Integer count) -> Array[sample]
   def self.run: (Array[String] arguments) -> void
 end

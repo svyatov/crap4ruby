@@ -4,27 +4,27 @@ The benchmark compares complete CLI runs on local project checkouts. It checks r
 
 ## Measured results (2026-10-29)
 
-Baseline: `19942c2` (0.2.1). Candidate: `6a1701b`. Runtime: Ruby 4.0.9, Prism 1.9.0, arm64 macOS.
+Baseline: `19942c2` (0.2.1). Candidate: `2f23c80`. Runtime: Ruby 4.0.9, Prism 1.9.0, arm64 macOS.
 
 Each variant has seven measured subprocess runs after one excluded warmup. Variant order alternates, and runs execute serially with warm filesystem caches.
 
 | Project | Mode | Ruby files | Baseline median | Candidate median | Time reduction |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Les | Complexity only | 196 | 0.2501 s | 0.1839 s | 26.5% |
-| Les | SimpleCov coverage | 196 | 0.2895 s | 0.2394 s | 17.3% |
-| Forem | Complexity only | 1,307 | 0.9923 s | 0.6276 s | 36.8% |
-| Steep | Complexity only | 146 | 0.5512 s | 0.3287 s | 40.4% |
-| YARD | Complexity only | 207 | 0.3753 s | 0.2609 s | 30.5% |
+| Les | Complexity only | 196 | 0.2530 s | 0.1485 s | 41.3% |
+| Les | SimpleCov coverage | 196 | 0.2840 s | 0.1788 s | 37.1% |
+| Forem | Complexity only | 1,307 | 0.9631 s | 0.3761 s | 60.9% |
+| Steep | Complexity only | 146 | 0.5330 s | 0.2185 s | 59.0% |
+| YARD | Complexity only | 207 | 0.3699 s | 0.1768 s | 52.2% |
 
-[Raw samples and input/output hashes](benchmark/results/2026-10-29-report-score.jsonl) retain every measured duration. Each line is a JSON object; the first contains campaign metadata. The final four objects contain formatting, scoring, and batch experiments described below.
+[Raw samples and input/output hashes](benchmark/results/2026-10-29-batch.jsonl) retain every measured duration. Each line is a JSON object. Campaign records distinguish the original baseline, the optimized serial baseline, current-code worker settings, and small inputs. Grouped samples factor identical metadata without dropping values. Phase, resource, and independent QA records are separate.
 
-The earlier campaigns measured [candidate `80484fd`](benchmark/results/2026-10-29.jsonl) and [candidate `2f35bdd`](benchmark/results/2026-10-29-follow-up.jsonl) against the same baseline. Project input and report hashes match across campaigns. Timing differences between campaigns do not isolate individual changes.
+The earlier campaigns measured [candidate `80484fd`](benchmark/results/2026-10-29.jsonl), [candidate `2f35bdd`](benchmark/results/2026-10-29-follow-up.jsonl), and [candidate `6a1701b`](benchmark/results/2026-10-29-report-score.jsonl) against the same baseline. Project input and report hashes match across campaigns. Timing differences between campaigns do not isolate individual changes.
 
 Timing includes Ruby startup, Prism activation, discovery, source reads, analysis, coverage loading, sorting, formatting, output capture, and process completion. Both variants start without inherited Bundler setup and activate the same Prism version. Runs use `--no-save`, so timing excludes snapshot serialization and writes. Test-suite execution is excluded.
 
-Every measured report matches its baseline byte for byte. Separate differential checks preserve all fields and traversal order across 10,568 method definitions in these four projects. Independent fixture checks cover nested definitions, heredocs, encoding, assignment syntax, errors, and coverage on Ruby 3.3.11 and 4.0.9 with Prism 1.9.0. Prism 1.0 and 2.x were not executed.
+Every measured report matches its baseline byte for byte. Separate differential checks preserve all fields and traversal order across 10,568 method definitions in these four projects. Independent fixture checks cover nested definitions, heredocs, encoding, assignment syntax, errors, and coverage on Ruby 3.3.11 and 4.0.9. The batch implementation also passed 75 independent CLI runs and 21 controlled lifecycle probes on Ruby 3.3.11, 3.4.9, and 4.0.9. All used Prism 1.9.0. Prism 1.0 and 2.x were not executed.
 
-These results describe local checkouts and warm filesystem caches. They do not establish cold-disk latency, peak memory, or performance on other machines.
+These results describe local checkouts and warm filesystem caches. They do not establish cold-disk latency, unique physical memory use, or performance on other machines. Separately sampled summed RSS is reported below.
 
 ## Repeat the comparison
 
@@ -48,6 +48,8 @@ These results describe local checkouts and warm filesystem caches. They do not e
    ```
 
 The command prints JSON to stdout and median/range summaries to stderr. Pass multiple project paths to measure them serially. Set `SAMPLES` to an odd integer of at least three to change the sample count.
+
+For a comparison of current-code serial execution against its automatic default, use `BASELINE_JOBS=1` and pass `lib` as the baseline directory. `CANDIDATE_JOBS` can override the candidate worker count. Both optional settings are recorded in the output; use them only with library versions that support `--jobs`.
 
 The runner selects existing `app/` and `lib/` directories. It measures complexity-only mode and adds coverage-enabled mode when `coverage/.resultset.json` exists. It hashes selected paths and contents before and after each subprocess. Coverage-enabled runs also hash the coverage report. Library hashes must remain unchanged throughout the campaign.
 
@@ -91,9 +93,55 @@ The formatter reduced phase time by 39% and allocated objects by 67%. Scoring re
 
 Independent differential checks matched 146 formatter cases and 74 scoring cases on Ruby 3.3.11 and 4.0.9. These include encoding and control characters, exact Rational values, partial coverage, and large integers.
 
-### Batch prototype
+### Automatic batch analysis
 
-A throwaway fork-based prototype tested analysis and scoring across files. It does not change the library. It excludes CLI startup, discovery, sorting, formatting, and saving. Seven measured rounds followed one excluded warmup round; worker order rotated. Selected file contents and all returned entries matched across worker counts.
+Selections of at least 64 files use up to four worker processes, bounded by available processors. Smaller selections, unsupported fork platforms, and hosts with other live Ruby threads remain serial. `--jobs 1` forces serial execution. Result order and all report writes remain controlled by the parent.
+
+The following campaign compares the same `2f23c80` library with `--jobs 1` against its automatic default. It isolates worker selection without changing the loaded library. Each mode has seven alternating measured subprocess runs after one excluded warmup.
+
+| Project | Mode | Serial median | Automatic median | Time reduction |
+| --- | --- | ---: | ---: | ---: |
+| Les | Complexity only | 0.1960 s | 0.1579 s | 19.4% |
+| Les | SimpleCov coverage | 0.2438 s | 0.1800 s | 26.1% |
+| Forem | Complexity only | 0.6207 s | 0.3822 s | 38.4% |
+| Steep | Complexity only | 0.3215 s | 0.2160 s | 32.8% |
+| YARD | Complexity only | 0.2507 s | 0.1732 s | 30.9% |
+
+A separate paired campaign against the earlier optimized serial implementation, `6a1701b`, measured reductions of 19.6% to 40.0%. All reports matched. The raw data keeps this comparison separate from the original-baseline and worker-override campaigns.
+
+Real-project subsets support the 64-file automatic threshold. The phase experiment includes source reads, parsing, scoring, fork startup, cancellation-thread startup, and result transfer. It excludes discovery, coverage loading, sorting, formatting, and process startup. Each trial has one excluded warmup batch; worker order rotates across seven fresh subprocess trials.
+
+| Project | Selected files | Serial phase median | Four-worker phase median |
+| --- | ---: | ---: | ---: |
+| Forem | 16 | 0.0063 s | 0.0087 s |
+| Forem | 32 | 0.0124 s | 0.0114 s |
+| Forem | 64 | 0.0272 s | 0.0198 s |
+| Forem | 128 | 0.0439 s | 0.0241 s |
+| Les, coverage | 16 | 0.0068 s | 0.0116 s |
+| Les, coverage | 32 | 0.0174 s | 0.0157 s |
+| Les, coverage | 64 | 0.0301 s | 0.0197 s |
+| Les, coverage | 128 | 0.0648 s | 0.0307 s |
+
+Four workers lose at 16 files, show smaller gains at 32, and reduce phase time by 27% to 35% at 64. On the full selections, automatic analysis-and-scoring time was 0.1599 s versus 0.4082 s for Forem, and 0.0575 s versus 0.1186 s for Les. Median total parent-plus-child CPU time increased from 0.4073 s to 0.4615 s on Forem, and from 0.1180 s to 0.1608 s on Les: increases of 13.3% and 36.2%.
+
+Seven alternating memory probes per configuration sampled the sum of CLI parent and worker RSS every 10 ms. This includes startup and reporting; fork telemetry and polling perturb timing, so these probes support no latency claim. Shared pages are counted once per process, and sampling can miss short peaks. These are not measurements of unique physical memory.
+
+| Project | Serial median sampled peak sum RSS | Automatic median sampled peak sum RSS |
+| --- | ---: | ---: |
+| Forem | 73,678,848 bytes | 194,854,912 bytes |
+| Les, coverage | 47,005,696 bytes | 112,443,392 bytes |
+
+Independent QA compared serial baseline `6a1701b` with automatic mode and `--jobs 1/2/4` through actual CLI subprocesses on all four projects. It preserved stdout, stderr, exit statuses, source and coverage inputs, and existing snapshots across three Ruby versions. Controlled probes exercised ordering, exact Rational scores, Unicode, payloads larger than a pipe buffer, malformed results, abnormal exits, first-error ordering, multithreaded fallback, cancellation, and custom SIGCHLD reapers. All probes finished without remaining children. Cleanup made no PID signals and did not replace host signal handlers. The main suite additionally covers unavailable fork, partial startup failure, and SIGINT cancellation.
+
+Review found a stale-PID signaling race when a host reaped worker statuses. The repaired implementation cancels through private pipes and uses a child monitor thread, then validates complete result payloads even if the host has consumed the exit status. The two reproducing regression tests and the full 86-test suite pass. The measurements above include this repair.
+
+A separate [process-group SIGINT probe](benchmark/results/2026-10-29-batch-sigint.json) delivered SIGINT after all four workers started. The CLI terminated on signal 2, preserved its existing snapshot, emitted no report, and left no processes in its group.
+
+Small-input CLI comparisons against `6a1701b` remained serial. Medians for 16 and 32 files ranged from effectively unchanged to 4.0% slower, with overlapping timing ranges. The largest median difference was 5.1 ms. Small-input startup overhead and EDN serialization remain profiling candidates; these results do not establish a performance maximum.
+
+### Batch screening prototype
+
+An earlier throwaway fork-based prototype screened analysis and scoring across files before the production worker implementation. These historical phase measurements exclude CLI startup, discovery, sorting, formatting, and saving. Seven measured rounds followed one excluded warmup round; worker order rotated. Selected file contents and all returned entries matched across worker counts. The prototype samples are retained in the earlier report-and-score campaign.
 
 | Project and mode | Worker processes | Median elapsed time | Median total CPU time |
 | --- | ---: | ---: | ---: |
@@ -104,4 +152,4 @@ A throwaway fork-based prototype tested analysis and scoring across files. It do
 | Les, coverage | 2 | 0.0776 s | 0.1377 s |
 | Les, coverage | 4 | 0.0566 s | 0.1532 s |
 
-Four workers reduced phase latency by 63% on Forem and 54% on Les, while increasing total CPU time by 11% and 26%. Total CPU includes parent and child processes. Aggregate memory, portability, worker cancellation, and failure behavior still need evaluation before adding this execution model. These measurements do not establish a performance maximum.
+Four workers reduced prototype phase latency by 63% on Forem and 54% on Les, while increasing total CPU time by 11% and 26%. Total CPU includes parent and child processes. The production implementation and its resource costs are measured separately above.
