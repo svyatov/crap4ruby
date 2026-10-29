@@ -53,6 +53,46 @@ class CLITest < Minitest::Test
     assert_match(/threshold/i, @err.string)
   end
 
+  def test_no_save_reports_complexity_without_creating_metrics_directory
+    write("lib/sample.rb", "def pick(x) = x ? 1 : 0\n")
+
+    assert_equal 0, run_cli("--no-coverage", "--no-save")
+    assert_match(%r{pick\s+Object\s+2\s+N/A\s+N/A}, @out.string)
+    assert_empty @err.string
+    refute_path_exists File.join(@root, ".metrics")
+  end
+
+  def test_no_save_preserves_snapshot_when_threshold_is_uncertain
+    write("lib/sample.rb", "def pick(x) = x ? 1 : 0\n")
+    write(".metrics/crap.edn", "previous snapshot\n")
+
+    assert_equal 1, run_cli("--no-coverage", "--no-save", "--threshold", "5")
+    assert_includes @out.string, "pick"
+    assert_includes @err.string, "Cannot verify CRAP threshold"
+    refute_includes @err.string, "Wrote"
+    assert_equal "previous snapshot\n", snapshot
+  end
+
+  def test_no_save_reports_coverage_and_measured_threshold_violations
+    write("lib/sample.rb", "def pick(x)\n x ? 1 : 0\nend\n")
+    write("results.json", JSON.generate("Test" => {"coverage" => {
+      "lib/sample.rb" => [1, 0, nil]
+    }}))
+    write(".metrics/crap.edn", "previous snapshot\n")
+
+    assert_equal 2, run_cli("--coverage", "results.json", "--no-save", "--threshold", "5")
+    assert_match(/pick\s+Object\s+2\s+0\.0%\s+6\.0/, @out.string)
+    assert_includes @err.string, "CRAP threshold exceeded"
+    refute_includes @err.string, "Wrote"
+    assert_equal "previous snapshot\n", snapshot
+  end
+
+  def test_no_save_does_not_create_snapshot_for_empty_selection
+    assert_equal 0, run_cli("--no-save")
+    assert_includes @out.string, "CRAP Report"
+    refute_path_exists File.join(@root, ".metrics")
+  end
+
   def test_preserves_decimal_threshold_precision
     write("lib/sample.rb", "def pick(x)\n value = 1\n if x\n value + 1\n else\n value - 1\n value - 2\n end\nend\n")
     write("results.json", JSON.generate("RSpec" => {"coverage" => {

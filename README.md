@@ -96,6 +96,7 @@ crap4ruby does not configure SimpleCov, delete reports, install dependencies, or
 | `--use-existing-coverage` | Explicitly select the default: read reports without running tests. |
 | `--coverage-command COMMAND` | Run a shell command that refreshes the selected report. |
 | `--no-coverage` | Report complexity with unknown coverage and CRAP. |
+| `--no-save` | Print results without creating or replacing `.metrics/crap.edn`. |
 | `--threshold NUMBER` | Check this finite, nonnegative limit; exit 2 for a measured violation, or 1 if an unknown score could exceed it. |
 | `-h`, `--help` | Print usage. |
 | `-v`, `--version` | Print the gem version. |
@@ -114,7 +115,16 @@ Exit 2 means a measured score exceeded the threshold. A measured violation takes
 Decimal thresholds are compared exactly with the computed scores, before display rounding.
 For unknown scores, the check uses the maximum possible score, `CC^2 + CC`, at zero coverage. If this maximum fits the threshold, the method passes; otherwise, the check returns exit 1 and names the method. Its displayed score remains N/A. This also applies with `--no-coverage`.
 For example, an unknown score at CC 2 passes a threshold of 6, but cannot pass a threshold of 5. Supply fresh, measurable coverage or adjust the limit to resolve uncertainty.
-Every completed analysis replaces the snapshot, including filtered analyses, empty selections, and failed threshold checks.
+By default, every completed analysis replaces the snapshot, including filtered analyses, empty selections, and failed threshold checks.
+
+For pre-commit or pre-push hooks that check complexity without tests or coverage, use:
+
+```sh
+bundle exec crap4ruby --no-coverage --no-save
+```
+
+`--no-save` preserves the terminal report and threshold exit codes while leaving the snapshot unchanged.
+It also works with coverage enabled.
 
 ## Complexity and coverage
 

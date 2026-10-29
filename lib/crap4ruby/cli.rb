@@ -14,7 +14,7 @@ module Crap4Ruby
       @stderr = stderr
     end
 
-    # Runs the requested analysis and replaces the snapshot after successful scoring.
+    # Runs the requested analysis and replaces the snapshot unless --no-save is set.
     # Help and version requests produce output without writing a snapshot.
     # Expected usage, input, filesystem, and command errors are printed to stderr.
     #
@@ -34,9 +34,11 @@ module Crap4Ruby
       files = Discovery.call(root: root, source_roots: options[:source_roots], paths: paths, changed: options[:changed])
       coverage = load_coverage(options, root) unless options[:no_coverage] || files.empty?
       entries = Report.sorted(analyze(files, coverage))
-      path = Report.write(entries, root: root)
+      unless options[:no_save]
+        path = Report.write(entries, root: root)
+        @stderr.puts("Wrote #{path}")
+      end
       @stdout.write(Report.table(entries))
-      @stderr.puts("Wrote #{path}")
       threshold_status(entries, options[:threshold])
     rescue Error, OptionParser::ParseError, SystemCallError => error
       @stderr.puts("crap4ruby: #{error.message}")
@@ -75,6 +77,7 @@ module Crap4Ruby
           options[:coverage] = path
         end
         cli.on("--no-coverage", "Complexity only; coverage and CRAP are N/A") { options[:no_coverage] = true }
+        cli.on("--no-save", "Print results without writing .metrics/crap.edn") { options[:no_save] = true }
         cli.on("--use-existing-coverage", "Read reports without running tests (the default)") do
           options[:existing] = true
         end

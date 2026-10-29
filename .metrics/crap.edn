@@ -1,10 +1,10 @@
 {:entries [
   {:name "defined_name", :namespace "Crap4Ruby::Analyzer", :complexity 10, :coverage 100.0, :crap 10.0}
+  {:name "run", :namespace "Crap4Ruby::CLI", :complexity 10, :coverage 100.0, :crap 10.0}
   {:name "self.call", :namespace "Crap4Ruby::Discovery", :complexity 10, :coverage 100.0, :crap 10.0}
   {:name "self.walk", :namespace "Crap4Ruby::Discovery", :complexity 10, :coverage 100.0, :crap 10.0}
   {:name "discover", :namespace "Crap4Ruby::Analyzer", :complexity 9, :coverage 100.0, :crap 9.0}
   {:name "discover_method", :namespace "Crap4Ruby::Analyzer", :complexity 9, :coverage 100.0, :crap 9.0}
-  {:name "run", :namespace "Crap4Ruby::CLI", :complexity 9, :coverage 100.0, :crap 9.0}
   {:name "threshold_status", :namespace "Crap4Ruby::CLI", :complexity 9, :coverage 100.0, :crap 9.0}
   {:name "add_file", :namespace "Crap4Ruby::Coverage", :complexity 9, :coverage 100.0, :crap 9.0}
   {:name "self.table", :namespace "Crap4Ruby::Report", :complexity 9, :coverage 100.0, :crap 9.0}
@@ -16,7 +16,7 @@
   {:name "decision?", :namespace "Crap4Ruby::Analyzer", :complexity 6, :coverage 100.0, :crap 6.0}
   {:name "discover_block", :namespace "Crap4Ruby::Analyzer", :complexity 6, :coverage 100.0, :crap 6.0}
   {:name "iteration?", :namespace "Crap4Ruby::Analyzer", :complexity 6, :coverage 100.0, :crap 6.0}
-  {:name "parse_options", :namespace "Crap4Ruby::CLI", :complexity 5, :coverage 96.0, :crap 5.0016}
+  {:name "parse_options", :namespace "Crap4Ruby::CLI", :complexity 5, :coverage 96.1538, :crap 5.0014}
   {:name "assignment_target?", :namespace "Crap4Ruby::Analyzer", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "safe_navigation?", :namespace "Crap4Ruby::Analyzer", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "run_coverage", :namespace "Crap4Ruby::CLI", :complexity 5, :coverage 100.0, :crap 5.0}
