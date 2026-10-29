@@ -12,6 +12,6 @@ target :development do
   check "test", "script", "bin/*", "Rakefile", "Gemfile", "gemfiles/release/Gemfile", "crap4ruby.gemspec", "Steepfile"
   signature "sig", "sig-development"
   library "prism", "json", "optparse", "find", "open3", "fileutils", "tempfile",
-    "tmpdir", "stringio", "shellwords", "coverage", "csv", "pathname"
+    "tmpdir", "stringio", "shellwords", "coverage", "csv", "pathname", "digest"
   configure_code_diagnostics Steep::Diagnostic::Ruby.all_error
 end
