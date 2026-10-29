@@ -25,6 +25,19 @@ class AnalyzerTest < Minitest::Test
   def test_finds_literal_define_method_blocks_and_their_nested_definitions: () -> void
 end
 
+class BatchTest < Minitest::Test
+  @root: String
+  @first: String
+  @second: String
+  def setup: () -> void
+  def teardown: () -> void
+  def test_serial_batch_preserves_order_and_coverage: () -> void
+  def test_complexity_only_batch_leaves_scores_unknown: () -> void
+  def test_empty_batch_returns_no_entries: () -> void
+  def test_rejects_nonpositive_worker_counts: () -> void
+  def test_batch_preserves_parse_and_filesystem_errors: () -> void
+end
+
 class CLITest < Minitest::Test
   @root: String
   @out: StringIO

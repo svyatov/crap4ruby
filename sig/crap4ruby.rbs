@@ -81,6 +81,10 @@ module Crap4Ruby
     def self.call: (MethodInfo method, Coverage? coverage) -> Entry
   end
 
+  module Batch
+    def self.call: (Array[String] files, Coverage? coverage, ?jobs: Integer?) -> Array[Entry]
+  end
+
   module Report
     def self.sorted: (Array[Entry] entries) -> Array[Entry]
     def self.table: (Array[Entry] entries) -> String

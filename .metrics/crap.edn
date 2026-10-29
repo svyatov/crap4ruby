@@ -19,6 +19,7 @@
   {:name "assignment_target?", :namespace "Crap4Ruby::Analyzer", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "decision?", :namespace "Crap4Ruby::Analyzer", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "safe_navigation?", :namespace "Crap4Ruby::Analyzer", :complexity 5, :coverage 100.0, :crap 5.0}
+  {:name "self.call", :namespace "Crap4Ruby::Batch", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "run_coverage", :namespace "Crap4Ruby::CLI", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "self.selection_roots", :namespace "Crap4Ruby::Discovery", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "body_end_node", :namespace "Crap4Ruby::Analyzer", :complexity 4, :coverage 100.0, :crap 4.0}
@@ -30,7 +31,6 @@
   {:name "self.call", :namespace "Crap4Ruby::Score", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "discover_class", :namespace "Crap4Ruby::Analyzer", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "method_owner", :namespace "Crap4Ruby::Analyzer", :complexity 3, :coverage 100.0, :crap 3.0}
-  {:name "analyze", :namespace "Crap4Ruby::CLI", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "self.changed_files", :namespace "Crap4Ruby::Discovery", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "self.edn", :namespace "Crap4Ruby::Report", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "self.number", :namespace "Crap4Ruby::Report", :complexity 3, :coverage 100.0, :crap 3.0}
@@ -43,6 +43,7 @@
   {:name "self.label", :namespace "Crap4Ruby::Report", :complexity 2, :coverage 100.0, :crap 2.0}
   {:name "initialize", :namespace "Crap4Ruby::Analyzer", :complexity 1, :coverage 100.0, :crap 1.0}
   {:name "trailing_code?", :namespace "Crap4Ruby::Analyzer", :complexity 1, :coverage 100.0, :crap 1.0}
+  {:name "analyze", :namespace "Crap4Ruby::CLI", :complexity 1, :coverage 100.0, :crap 1.0}
   {:name "initialize", :namespace "Crap4Ruby::CLI", :complexity 1, :coverage 100.0, :crap 1.0}
   {:name "self.write", :namespace "Crap4Ruby::Report", :complexity 1, :coverage 100.0, :crap 1.0}
 ]}

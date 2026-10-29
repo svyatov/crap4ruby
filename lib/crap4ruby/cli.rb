@@ -48,10 +48,7 @@ module Crap4Ruby
     private
 
     def analyze(files, coverage)
-      analyzer = Analyzer.new(coverage: !coverage.nil?)
-      files.flat_map do |path|
-        analyzer.call(File.binread(path), path: path).map { |method| Score.call(method, coverage) }
-      end
+      Batch.call(files, coverage)
     end
 
     # Removes parsed options from arguments and returns the remaining path selectors.
