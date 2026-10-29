@@ -60,7 +60,8 @@ module Crap4Ruby
     def self.number(value)
       return "nil" if value.nil?
 
-      text = format("%.4f", value).sub(/0+\z/, "")
+      text = format("%.4f", value)
+      text.sub!(/0+\z/, "")
       text.end_with?(".") ? "#{text}0" : text
     end
 
