@@ -44,43 +44,44 @@ module Crap4Ruby
     # @param scope [Array<String>] lexical namespace components
     # @param singleton [Boolean] whether definitions belong to a singleton class
     # @param path [String] source label
+    # @param methods [Array<MethodInfo>] ordered output shared by the traversal
     # @return [Array<MethodInfo>] discovered method definitions
-    def discover(node, scope, singleton, path)
-      return [] unless node
+    def discover(node, scope, singleton, path, methods = [])
+      return methods unless node
 
       case node
       when Prism::ClassNode, Prism::ModuleNode
-        discover_class(node, scope, singleton, path)
+        discover_class(node, scope, singleton, path, methods)
       when Prism::SingletonClassNode
         owner = node.expression.is_a?(Prism::SelfNode) ? scope : qualify(node.expression, scope)
-        owner ? discover(node.body, owner, true, path) : []
+        discover(node.body, owner, true, path, methods) if owner
       when Prism::DefNode
-        discover_method(node, scope, singleton, path)
+        discover_method(node, scope, singleton, path, methods)
       when Prism::CallNode
-        discover_call(node, scope, singleton, path)
+        discover_call(node, scope, singleton, path, methods)
       else
-        node.compact_child_nodes.flat_map { |child| discover(child, scope, singleton, path) }
+        node.compact_child_nodes.each { |child| discover(child, scope, singleton, path, methods) }
       end
+      methods
     end
 
-    def discover_class(node, scope, singleton, path)
-      # @type var methods: Array[MethodInfo]
-      methods = node.is_a?(Prism::ClassNode) ? discover(node.superclass, scope, singleton, path) : []
+    def discover_class(node, scope, singleton, path, methods)
+      discover(node.superclass, scope, singleton, path, methods) if node.is_a?(Prism::ClassNode)
       owner = qualify(node.constant_path, scope, declaration: true)
-      methods + (owner ? discover(node.body, owner, false, path) : [])
+      discover(node.body, owner, false, path, methods) if owner
     end
 
-    def discover_call(node, scope, singleton, path)
+    def discover_call(node, scope, singleton, path, methods)
       name = defined_name(node)
       block = node.block
       if name && block.is_a?(Prism::BlockNode)
-        discover_block(block, name, scope, singleton, path)
+        discover_block(block, name, scope, singleton, path, methods)
       else
-        node.compact_child_nodes.flat_map { |child| discover(child, scope, singleton, path) }
+        node.compact_child_nodes.each { |child| discover(child, scope, singleton, path, methods) }
       end
     end
 
-    def discover_block(block, name, scope, singleton, path)
+    def discover_block(block, name, scope, singleton, path, methods)
       raise EncodingError unless name.valid_encoding?
 
       name = name.encode(Encoding::UTF_8)
@@ -88,8 +89,10 @@ module Crap4Ruby
       header = parameters.is_a?(Prism::BlockParametersNode) ? parameters.location : block.opening_loc
       lines = body_lines(block.body, after: header.end_line, ending: block.location)
       name = "self.#{name}" if singleton
-      [MethodInfo.new(name, scope.empty? ? "Object" : scope.join("::"), 1 + decisions(block.body), lines, path)] +
-        discover(block.parameters, scope, singleton, path) + discover(block.body, scope, singleton, path)
+      methods << MethodInfo.new(name, scope.empty? ? "Object" : scope.join("::"),
+        1 + decisions(block.body), lines, path)
+      discover(block.parameters, scope, singleton, path, methods)
+      discover(block.body, scope, singleton, path, methods)
     rescue EncodingError
       raise Error, "#{path}:#{block.location.start_line}: define_method name must be representable in UTF-8"
     end
@@ -111,18 +114,19 @@ module Crap4Ruby
     # @param scope [Array<String>] lexical namespace components
     # @param singleton [Boolean] whether the enclosing scope is a singleton class
     # @param path [String] source label
-    # @return [Array<MethodInfo>] this method and its nested definitions
-    def discover_method(node, scope, singleton, path)
+    # @param methods [Array<MethodInfo>] ordered output shared by the traversal
+    # @return [void]
+    def discover_method(node, scope, singleton, path, methods)
       owner = method_owner(node, scope)
-      return [] unless owner
+      return unless owner
 
       name = "#{"self." if singleton || node.receiver}#{node.name}"
       header = node.equal_loc || node.rparen_loc || node.parameters&.location || node.name_loc
       lines = body_lines(node.body, after: header.end_line, ending: node.location)
       complexity = 1 + decisions(node.body)
-      [MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), complexity, lines, path)] +
-        discover(node.parameters, scope, singleton, path) +
-        discover(node.body, scope, singleton, path)
+      methods << MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), complexity, lines, path)
+      discover(node.parameters, scope, singleton, path, methods)
+      discover(node.body, scope, singleton, path, methods)
     end
 
     def method_owner(node, scope)
@@ -201,10 +205,21 @@ module Crap4Ruby
     def decision?(node)
       return !node.begin_modifier? if node.is_a?(Prism::WhileNode) || node.is_a?(Prism::UntilNode)
 
-      %i[if_node unless_node for_node
-        when_node in_node rescue_modifier_node and_node or_node].include?(node.type) ||
-        node.type.to_s.match?(/_(?:and|or)_write_node\z/) ||
-        (node.is_a?(Prism::BeginNode) && !node.rescue_clause.nil?)
+      case node.type
+      when :if_node, :unless_node, :for_node, :when_node, :in_node,
+          :rescue_modifier_node, :and_node, :or_node,
+          :call_and_write_node, :call_or_write_node,
+          :class_variable_and_write_node, :class_variable_or_write_node,
+          :constant_and_write_node, :constant_or_write_node,
+          :constant_path_and_write_node, :constant_path_or_write_node,
+          :global_variable_and_write_node, :global_variable_or_write_node,
+          :index_and_write_node, :index_or_write_node,
+          :instance_variable_and_write_node, :instance_variable_or_write_node,
+          :local_variable_and_write_node, :local_variable_or_write_node
+        true
+      else
+        node.is_a?(Prism::BeginNode) && !node.rescue_clause.nil?
+      end
     end
 
     def safe_navigation?(node, seen)

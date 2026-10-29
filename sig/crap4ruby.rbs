@@ -34,11 +34,11 @@ module Crap4Ruby
     ITERATING_METHODS: Array[Symbol]
     def call: (String source, path: String) -> Array[MethodInfo]
     private
-    def discover: (Prism::Node? node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
-    def discover_class: (Prism::ClassNode | Prism::ModuleNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
-    def discover_call: (Prism::CallNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
-    def discover_method: (Prism::DefNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
-    def discover_block: (Prism::BlockNode block, String name, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
+    def discover: (Prism::Node? node, Array[String] scope, bool singleton, String path, ?Array[MethodInfo] methods) -> Array[MethodInfo]
+    def discover_class: (Prism::ClassNode | Prism::ModuleNode node, Array[String] scope, bool singleton, String path, Array[MethodInfo] methods) -> void
+    def discover_call: (Prism::CallNode node, Array[String] scope, bool singleton, String path, Array[MethodInfo] methods) -> void
+    def discover_method: (Prism::DefNode node, Array[String] scope, bool singleton, String path, Array[MethodInfo] methods) -> void
+    def discover_block: (Prism::BlockNode block, String name, Array[String] scope, bool singleton, String path, Array[MethodInfo] methods) -> void
     def defined_name: (Prism::Node node) -> String?
     def method_owner: (Prism::DefNode node, Array[String] scope) -> Array[String]?
     def qualify: (Prism::Node? node, Array[String] scope, ?declaration: bool) -> Array[String]?

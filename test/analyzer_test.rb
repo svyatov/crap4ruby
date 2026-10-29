@@ -168,6 +168,31 @@ class AnalyzerTest < Minitest::Test
     assert_equal 3, method.complexity
   end
 
+  def test_counts_boolean_assignments_for_each_ruby_target
+    method = analyze(<<~RUBY).first
+      define_method(:update) do
+        local &&= true
+        local ||= false
+        @instance &&= true
+        @instance ||= false
+        @@class_variable &&= true
+        @@class_variable ||= false
+        $global &&= true
+        $global ||= false
+        Constant &&= true
+        Constant ||= false
+        Owner::Constant &&= true
+        Owner::Constant ||= false
+        object.value &&= true
+        object.value ||= false
+        object[0] &&= true
+        object[0] ||= false
+      end
+    RUBY
+
+    assert_equal 17, method.complexity
+  end
+
   def test_discounts_repeated_safe_navigation_until_local_assignment
     method = analyze(<<~RUBY).first
       def update(value, other)
