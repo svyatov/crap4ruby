@@ -262,10 +262,12 @@ module Crap4Ruby
     end
 
     def boundary?(node)
-      [Prism::DefNode, Prism::ClassNode, Prism::ModuleNode, Prism::SingletonClassNode].any? do |type|
-        node.is_a?(type)
-      end ||
+      case node
+      when Prism::DefNode, Prism::ClassNode, Prism::ModuleNode, Prism::SingletonClassNode
+        true
+      else
         !defined_name(node).nil?
+      end
     end
 
     # Selects body lines without nested methods, classes, or modules.
