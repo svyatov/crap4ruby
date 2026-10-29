@@ -31,7 +31,9 @@ module Crap4Ruby
   end
 
   class Analyzer
+    @coverage: bool
     ITERATING_METHODS: Array[Symbol]
+    def initialize: (?coverage: bool) -> void
     def call: (String source, path: String) -> Array[MethodInfo]
     private
     def discover: (Prism::Node? node, Array[String] scope, bool singleton, String path, ?Array[MethodInfo] methods) -> Array[MethodInfo]

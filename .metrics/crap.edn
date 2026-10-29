@@ -1,19 +1,19 @@
 {:entries [
   {:name "defined_name", :namespace "Crap4Ruby::Analyzer", :complexity 10, :coverage 100.0, :crap 10.0}
+  {:name "discover_method", :namespace "Crap4Ruby::Analyzer", :complexity 10, :coverage 100.0, :crap 10.0}
   {:name "run", :namespace "Crap4Ruby::CLI", :complexity 10, :coverage 100.0, :crap 10.0}
   {:name "self.call", :namespace "Crap4Ruby::Discovery", :complexity 10, :coverage 100.0, :crap 10.0}
   {:name "self.walk", :namespace "Crap4Ruby::Discovery", :complexity 10, :coverage 100.0, :crap 10.0}
   {:name "discover", :namespace "Crap4Ruby::Analyzer", :complexity 9, :coverage 100.0, :crap 9.0}
-  {:name "discover_method", :namespace "Crap4Ruby::Analyzer", :complexity 9, :coverage 100.0, :crap 9.0}
   {:name "threshold_status", :namespace "Crap4Ruby::CLI", :complexity 9, :coverage 100.0, :crap 9.0}
   {:name "add_file", :namespace "Crap4Ruby::Coverage", :complexity 9, :coverage 100.0, :crap 9.0}
   {:name "self.table", :namespace "Crap4Ruby::Report", :complexity 9, :coverage 100.0, :crap 9.0}
   {:name "body_lines", :namespace "Crap4Ruby::Analyzer", :complexity 8, :coverage 100.0, :crap 8.0}
   {:name "decisions", :namespace "Crap4Ruby::Analyzer", :complexity 8, :coverage 100.0, :crap 8.0}
   {:name "qualify", :namespace "Crap4Ruby::Analyzer", :complexity 8, :coverage 100.0, :crap 8.0}
+  {:name "discover_block", :namespace "Crap4Ruby::Analyzer", :complexity 7, :coverage 100.0, :crap 7.0}
   {:name "fraction", :namespace "Crap4Ruby::Coverage", :complexity 7, :coverage 100.0, :crap 7.0}
   {:name "child_decisions", :namespace "Crap4Ruby::Analyzer", :complexity 6, :coverage 100.0, :crap 6.0}
-  {:name "discover_block", :namespace "Crap4Ruby::Analyzer", :complexity 6, :coverage 100.0, :crap 6.0}
   {:name "iteration?", :namespace "Crap4Ruby::Analyzer", :complexity 6, :coverage 100.0, :crap 6.0}
   {:name "parse_options", :namespace "Crap4Ruby::CLI", :complexity 5, :coverage 96.1538, :crap 5.0014}
   {:name "assignment_target?", :namespace "Crap4Ruby::Analyzer", :complexity 5, :coverage 100.0, :crap 5.0}
@@ -41,6 +41,7 @@
   {:name "self.load", :namespace "Crap4Ruby::Coverage", :complexity 2, :coverage 100.0, :crap 2.0}
   {:name "self.git", :namespace "Crap4Ruby::Discovery", :complexity 2, :coverage 100.0, :crap 2.0}
   {:name "self.label", :namespace "Crap4Ruby::Report", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "initialize", :namespace "Crap4Ruby::Analyzer", :complexity 1, :coverage 100.0, :crap 1.0}
   {:name "trailing_code?", :namespace "Crap4Ruby::Analyzer", :complexity 1, :coverage 100.0, :crap 1.0}
   {:name "initialize", :namespace "Crap4Ruby::CLI", :complexity 1, :coverage 100.0, :crap 1.0}
   {:name "self.write", :namespace "Crap4Ruby::Report", :complexity 1, :coverage 100.0, :crap 1.0}

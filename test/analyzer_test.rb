@@ -17,6 +17,22 @@ class AnalyzerTest < Minitest::Test
       [method.name, method.namespace, method.complexity, method.lines, method.path]
   end
 
+  def test_can_skip_coverage_lines_while_preserving_methods_and_complexity
+    methods = Crap4Ruby::Analyzer.new(coverage: false).call(<<~RUBY, path: "sample.rb")
+      def outer
+        def inner(flag)
+          flag ? 1 : 0
+        end
+      end
+      define_method(:dynamic) do |flag|
+        flag ? 1 : 0
+      end
+    RUBY
+
+    assert_equal([["outer", 2, nil], ["inner", 2, nil], ["dynamic", 2, nil]],
+      methods.map { |method| [method.name, method.complexity, method.lines] })
+  end
+
   def test_resolves_namespaces_and_singleton_methods
     methods = analyze(<<~RUBY)
       module Shop

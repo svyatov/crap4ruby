@@ -19,6 +19,13 @@ module Crap4Ruby
       transform_values transform_values!
     ].freeze
 
+    # Configures whether analysis collects body lines for coverage scoring.
+    #
+    # @param coverage [Boolean] collect body lines; false leaves MethodInfo#lines nil
+    def initialize(coverage: true)
+      @coverage = coverage
+    end
+
     # Analyzes method bodies with Prism and the RuboCop 1.92.1 counting rules.
     #
     # @param source [String] Ruby source text
@@ -85,9 +92,11 @@ module Crap4Ruby
       raise EncodingError unless name.valid_encoding?
 
       name = name.encode(Encoding::UTF_8)
-      parameters = block.parameters
-      header = parameters.is_a?(Prism::BlockParametersNode) ? parameters.location : block.opening_loc
-      lines = body_lines(block.body, after: header.end_line, ending: block.location)
+      if @coverage
+        parameters = block.parameters
+        header = parameters.is_a?(Prism::BlockParametersNode) ? parameters.location : block.opening_loc
+        lines = body_lines(block.body, after: header.end_line, ending: block.location)
+      end
       name = "self.#{name}" if singleton
       methods << MethodInfo.new(name, scope.empty? ? "Object" : scope.join("::"),
         1 + decisions(block.body), lines, path)
@@ -121,8 +130,10 @@ module Crap4Ruby
       return unless owner
 
       name = "#{"self." if singleton || node.receiver}#{node.name}"
-      header = node.equal_loc || node.rparen_loc || node.parameters&.location || node.name_loc
-      lines = body_lines(node.body, after: header.end_line, ending: node.location)
+      if @coverage
+        header = node.equal_loc || node.rparen_loc || node.parameters&.location || node.name_loc
+        lines = body_lines(node.body, after: header.end_line, ending: node.location)
+      end
       complexity = 1 + decisions(node.body)
       methods << MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), complexity, lines, path)
       discover(node.parameters, scope, singleton, path, methods)

@@ -48,8 +48,9 @@ module Crap4Ruby
     private
 
     def analyze(files, coverage)
+      analyzer = Analyzer.new(coverage: !coverage.nil?)
       files.flat_map do |path|
-        Analyzer.new.call(File.binread(path), path: path).map { |method| Score.call(method, coverage) }
+        analyzer.call(File.binread(path), path: path).map { |method| Score.call(method, coverage) }
       end
     end
 

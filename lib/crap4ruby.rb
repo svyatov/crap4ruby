@@ -26,7 +26,7 @@ module Crap4Ruby
   #     attr_reader :namespace
   #     # @return [Integer] cyclomatic complexity of the body
   #     attr_reader :complexity
-  #     # @return [Array<Integer>, nil] one-based body lines, or nil when line ownership is ambiguous
+  #     # @return [Array<Integer>, nil] one-based body lines, or nil when disabled or ambiguous
   #     attr_reader :lines
   #     # @return [String] source path supplied to the analyzer
   #     attr_reader :path
