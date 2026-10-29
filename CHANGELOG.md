@@ -5,6 +5,8 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-29
+
 ### Added
 
 - Add `--no-save` to print results and check thresholds without creating or replacing `.metrics/crap.edn`.
@@ -46,7 +48,8 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 - Split CLI execution, AST discovery, and coverage loading into smaller methods without changing their behavior or scoring rules.
 
-[Unreleased]: https://github.com/svyatov/crap4ruby/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/svyatov/crap4ruby/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/svyatov/crap4ruby/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/svyatov/crap4ruby/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/svyatov/crap4ruby/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/svyatov/crap4ruby/releases/tag/v0.1.0
