@@ -4,21 +4,21 @@ The benchmark compares complete CLI runs on local project checkouts. It checks r
 
 ## Measured results (2026-10-29)
 
-Baseline: `19942c2` (0.2.1). Candidate: `2f35bdd`. Runtime: Ruby 4.0.9, Prism 1.9.0, arm64 macOS.
+Baseline: `19942c2` (0.2.1). Candidate: `6a1701b`. Runtime: Ruby 4.0.9, Prism 1.9.0, arm64 macOS.
 
 Each variant has seven measured subprocess runs after one excluded warmup. Variant order alternates, and runs execute serially with warm filesystem caches.
 
 | Project | Mode | Ruby files | Baseline median | Candidate median | Time reduction |
 | --- | --- | ---: | ---: | ---: | ---: |
-| Les | Complexity only | 196 | 0.2307 s | 0.1698 s | 26.4% |
-| Les | SimpleCov coverage | 196 | 0.2838 s | 0.2361 s | 16.8% |
-| Forem | Complexity only | 1,307 | 0.9554 s | 0.6072 s | 36.5% |
-| Steep | Complexity only | 146 | 0.5001 s | 0.3073 s | 38.5% |
-| YARD | Complexity only | 207 | 0.3403 s | 0.2354 s | 30.8% |
+| Les | Complexity only | 196 | 0.2501 s | 0.1839 s | 26.5% |
+| Les | SimpleCov coverage | 196 | 0.2895 s | 0.2394 s | 17.3% |
+| Forem | Complexity only | 1,307 | 0.9923 s | 0.6276 s | 36.8% |
+| Steep | Complexity only | 146 | 0.5512 s | 0.3287 s | 40.4% |
+| YARD | Complexity only | 207 | 0.3753 s | 0.2609 s | 30.5% |
 
-[Raw samples and input/output hashes](benchmark/results/2026-10-29-follow-up.jsonl) retain every measured duration. Each line is a JSON object; the first contains campaign metadata. The final four objects contain phase experiments described below.
+[Raw samples and input/output hashes](benchmark/results/2026-10-29-report-score.jsonl) retain every measured duration. Each line is a JSON object; the first contains campaign metadata. The final four objects contain formatting, scoring, and batch experiments described below.
 
-The [earlier campaign](benchmark/results/2026-10-29.jsonl) measured candidate `80484fd` against the same baseline. Project input and report hashes match across campaigns. Timing differences between campaigns do not isolate the follow-up changes.
+The earlier campaigns measured [candidate `80484fd`](benchmark/results/2026-10-29.jsonl) and [candidate `2f35bdd`](benchmark/results/2026-10-29-follow-up.jsonl) against the same baseline. Project input and report hashes match across campaigns. Timing differences between campaigns do not isolate individual changes.
 
 Timing includes Ruby startup, Prism activation, discovery, source reads, analysis, coverage loading, sorting, formatting, output capture, and process completion. Both variants start without inherited Bundler setup and activate the same Prism version. Runs use `--no-save`, so timing excludes snapshot serialization and writes. Test-suite execution is excluded.
 
@@ -74,4 +74,34 @@ Each phase isolates one change against its preceding implementation. Analysis in
 
 Complete method records, merged coverage data, and selected file paths match within every phase. Independent checks also matched 382 Analyzer fixtures, 176 coverage cases, and 40 discovery scenarios on Ruby 3.3.11 and 4.0.9. Coverage checks include caller-array mutation, merged suites, unequal arrays, and symlink aliases.
 
-Moving the iteration block check before membership lookup showed no clear gain and was reverted. Remaining profiling candidates include scoring, report formatting, and batch analysis. These measurements do not establish a performance maximum.
+Moving the iteration block check before membership lookup showed no clear gain and was reverted.
+
+### Formatting and scoring
+
+The table formatter now uses one format template per report. Scoring combines integer terms before constructing the exact Rational result. Both changes preserve output and reduce allocated objects.
+
+| Experiment | Input and batch | Baseline median | Candidate median | Baseline allocated objects | Candidate allocated objects |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Table format template | Forem, 20 tables of 5,765 entries | 0.1991 s | 0.1206 s | 1,384,240 | 461,740 |
+| Integer score terms | Les, 20 scoring passes over 1,045 methods | 0.3267 s | 0.3192 s | 397,060 | 250,020 |
+
+Each experiment has seven alternating trials per variant, with one excluded warmup batch per process. The table experiment compares `562581a` with the formatter in `c0f10f6`. The scoring experiment compares `c0f10f6` with `6a1701b`. Allocation counts cover the measured batch only.
+
+The formatter reduced phase time by 39% and allocated objects by 67%. Scoring reduced allocated objects by 37%. Its elapsed time changed by 2.3%, and CPU time changed from 0.3256 s to 0.3175 s. These small timing changes do not establish a reliable speed gain. Median process peak RSS was 47,398,912 versus 47,431,680 bytes. Median GC count was 17 for both variants; candidate batches triggered 16 to 17 collections. Median GC time was 12 versus 10 ms. Fewer allocations are a retained improvement even without a demonstrated reduction in peak memory or median collection count.
+
+Independent differential checks matched 146 formatter cases and 74 scoring cases on Ruby 3.3.11 and 4.0.9. These include encoding and control characters, exact Rational values, partial coverage, and large integers.
+
+### Batch prototype
+
+A throwaway fork-based prototype tested analysis and scoring across files. It does not change the library. It excludes CLI startup, discovery, sorting, formatting, and saving. Seven measured rounds followed one excluded warmup round; worker order rotated. Selected file contents and all returned entries matched across worker counts.
+
+| Project and mode | Worker processes | Median elapsed time | Median total CPU time |
+| --- | ---: | ---: | ---: |
+| Forem, complexity only | 1 | 0.4104 s | 0.4059 s |
+| Forem, complexity only | 2 | 0.2656 s | 0.4365 s |
+| Forem, complexity only | 4 | 0.1504 s | 0.4507 s |
+| Les, coverage | 1 | 0.1220 s | 0.1211 s |
+| Les, coverage | 2 | 0.0776 s | 0.1377 s |
+| Les, coverage | 4 | 0.0566 s | 0.1532 s |
+
+Four workers reduced phase latency by 63% on Forem and 54% on Les, while increasing total CPU time by 11% and 26%. Total CPU includes parent and child processes. Aggregate memory, portability, worker cancellation, and failure behavior still need evaluation before adding this execution model. These measurements do not establish a performance maximum.
