@@ -26,11 +26,8 @@ module Crap4Ruby
           entry.crap ? format("%.1f", entry.crap) : "N/A"]
       end
       widths = rows.transpose.map { |column| column.map(&:length).max }
-      lines = rows.map do |row|
-        row.each_with_index.map do |value, index|
-          index < 2 ? value.ljust(widths[index]) : value.rjust(widths[index])
-        end.join("  ")
-      end
+      template = "%-#{widths[0]}s  %-#{widths[1]}s  %#{widths[2]}s  %#{widths[3]}s  %#{widths[4]}s"
+      lines = rows.map { |row| format(template, *row) }
       lines.insert(1, "-" * lines.first.length)
       "#{(["CRAP Report", "==========="] + lines).join("\n")}\n"
     end
