@@ -5,6 +5,8 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-29
+
 ### Added
 
 - Automatically analyze large selections with bounded worker processes. Add `--jobs N` to set the worker count or use `--jobs 1` for serial analysis, with serial fallback on unsupported or multithreaded hosts.
@@ -56,7 +58,8 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 - Split CLI execution, AST discovery, and coverage loading into smaller methods without changing their behavior or scoring rules.
 
-[Unreleased]: https://github.com/svyatov/crap4ruby/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/svyatov/crap4ruby/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/svyatov/crap4ruby/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/svyatov/crap4ruby/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/svyatov/crap4ruby/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/svyatov/crap4ruby/compare/v0.1.0...v0.1.1
