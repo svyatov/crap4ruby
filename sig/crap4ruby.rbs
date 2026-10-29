@@ -95,7 +95,7 @@ module Crap4Ruby
 
   class CLI
     type options = { root: String, source_roots: Array[String], changed: bool, coverage: String,
-      ?help: bool, ?version: bool, ?no_coverage: bool, ?existing: bool, ?command: String, ?threshold: Rational }
+      ?help: bool, ?version: bool, ?no_coverage: bool, ?no_save: bool, ?existing: bool, ?command: String, ?threshold: Rational }
     @stdout: _Output
     @stderr: _Output
     def initialize: (?stdout: _Output, ?stderr: _Output) -> void

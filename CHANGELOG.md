@@ -5,6 +5,10 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+### Added
+
+- Add `--no-save` to print results and check thresholds without creating or replacing `.metrics/crap.edn`.
+
 ## [0.2.0] - 2026-10-28
 
 ### Changed

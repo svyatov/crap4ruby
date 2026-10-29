@@ -35,6 +35,10 @@ class CLITest < Minitest::Test
   def git: (*String arguments) -> void
   def test_writes_complexity_only_table_and_snapshot: () -> void
   def test_reads_coverage_and_compares_unrounded_scores: () -> void
+  def test_no_save_reports_complexity_without_creating_metrics_directory: () -> void
+  def test_no_save_preserves_snapshot_when_threshold_is_uncertain: () -> void
+  def test_no_save_reports_coverage_and_measured_threshold_violations: () -> void
+  def test_no_save_does_not_create_snapshot_for_empty_selection: () -> void
   def test_preserves_decimal_threshold_precision: () -> void
   def test_requires_unknown_scores_to_fit_the_threshold_at_zero_coverage: () -> void
   def test_prioritizes_measured_violations_over_unknown_scores: () -> void
