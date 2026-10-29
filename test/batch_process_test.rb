@@ -369,4 +369,73 @@ class BatchProcessTest < Minitest::Test
       assert_empty error
     end
   end
+
+  def test_cli_workers_preserve_reports_snapshots_and_threshold_statuses
+    skip "fork is unavailable" unless Process.respond_to?(:fork)
+
+    run_program(<<~'RUBY') do |output, error, status|
+      require "stringio"
+      files.each { |path| File.write(path, "def pick(x)\n x ||= 1\n x\nend\n") }
+      report = File.join(root, "result.json")
+      File.write(report, JSON.generate("Test" => {"coverage" => {
+        files[0] => [1, 1, 0, nil], files[1] => [1, 1, 1, nil]
+      }}))
+      cases = [["--coverage", report, "--threshold", "3"], ["--coverage", report, "--threshold", "2"],
+        ["--no-coverage", "--threshold", "1"]]
+      results = [1, 2].map do |jobs|
+        cases.map do |arguments|
+          out, err = StringIO.new, StringIO.new
+          status = Crap4Ruby::CLI.new(stdout: out, stderr: err).run(
+            ["--root", root, "--jobs", jobs.to_s, *arguments, *files])
+          [status, out.string, err.string, File.read(File.join(root, ".metrics/crap.edn"))]
+        end
+      end
+      puts JSON.generate(equal: results[0] == results[1], statuses: results[1].map(&:first))
+    RUBY
+      assert status.success?, "#{output}\n#{error}"
+      # @type var result: { equal: bool, statuses: Array[Integer] }
+      result = JSON.parse(output, symbolize_names: true)
+
+      assert result.fetch(:equal)
+      assert_equal [0, 2, 1], result.fetch(:statuses)
+    end
+  end
+
+  def test_cli_worker_failures_preserve_the_previous_snapshot
+    skip "fork is unavailable" unless Process.respond_to?(:fork)
+
+    run_program(<<~RUBY) do |output, error, status|
+      require "stringio"
+      FileUtils.mkdir_p(File.join(root, ".metrics"))
+      snapshot = File.join(root, ".metrics/crap.edn")
+      File.write(snapshot, "previous snapshot")
+      File.write(files[0], "def broken(")
+      out, err = StringIO.new, StringIO.new
+      status = Crap4Ruby::CLI.new(stdout: out, stderr: err).run(
+        ["--root", root, "--no-coverage", "--jobs", "2", *files])
+      abort "parse error contract changed" unless status == 1 && out.string.empty? && err.string.include?("second.rb:")
+      abort "parse error replaced snapshot" unless File.read(snapshot) == "previous snapshot"
+      File.write(files[0], "def second = 2")
+      parent = Process.pid
+      Crap4Ruby::Analyzer.prepend(Module.new do
+        define_method(:call) do |source, path:|
+          Process.exit!(17) unless Process.pid == parent
+          super(source, path: path)
+        end
+      end)
+      out, err = StringIO.new, StringIO.new
+      status = Crap4Ruby::CLI.new(stdout: out, stderr: err).run(
+        ["--root", root, "--no-coverage", "--jobs", "2", *files])
+      puts JSON.generate(status: status, output: out.string, error: err.string, snapshot: File.read(snapshot))
+    RUBY
+      assert status.success?, "#{output}\n#{error}"
+      # @type var result: { status: Integer, output: String, error: String, snapshot: String }
+      result = JSON.parse(output, symbolize_names: true)
+
+      assert_equal 1, result.fetch(:status)
+      assert_empty result.fetch(:output)
+      assert_match(/worker failed/, result.fetch(:error))
+      assert_equal "previous snapshot", result.fetch(:snapshot)
+    end
+  end
 end

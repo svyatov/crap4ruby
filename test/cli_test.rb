@@ -219,6 +219,26 @@ class CLITest < Minitest::Test
     assert_equal "{:entries []}\n", snapshot
   end
 
+  def test_worker_option_preserves_reports_and_rejects_invalid_counts
+    write("lib/sample.rb", "def pick(x) = x ? 1 : 0\n")
+
+    assert_equal 0, run_cli("--no-coverage", "--jobs", "1")
+    serial_table = @out.string
+    serial_snapshot = snapshot
+
+    assert_equal 0, run_cli("--no-coverage", "--jobs", "2")
+    assert_equal serial_table, @out.string
+    assert_equal serial_snapshot, snapshot
+    %w[0 -1 1.5 invalid].each do |value|
+      assert_equal 1, run_cli("--jobs", value)
+      assert_empty @out.string
+      assert_includes @err.string, "jobs"
+      assert_equal serial_snapshot, snapshot
+    end
+    assert_equal 0, run_cli("--help")
+    assert_includes @out.string, "--jobs"
+  end
+
   def test_coverage_command_must_succeed_and_refresh_its_report
     write("lib/sample.rb", "def work\n 1\nend\n")
     write("collect.rb", <<~RUBY)

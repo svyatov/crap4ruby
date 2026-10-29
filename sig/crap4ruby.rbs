@@ -112,13 +112,13 @@ module Crap4Ruby
 
   class CLI
     type options = { root: String, source_roots: Array[String], changed: bool, coverage: String,
-      ?help: bool, ?version: bool, ?no_coverage: bool, ?no_save: bool, ?existing: bool, ?command: String, ?threshold: Rational }
+      ?help: bool, ?version: bool, ?no_coverage: bool, ?no_save: bool, ?existing: bool, ?command: String,
+      ?threshold: Rational, ?jobs: Integer }
     @stdout: _Output
     @stderr: _Output
     def initialize: (?stdout: _Output, ?stderr: _Output) -> void
     def run: (Array[String] arguments) -> Integer
     private
-    def analyze: (Array[String] files, Coverage? coverage) -> Array[Entry]
     def parse_options: (Array[String] arguments) -> [options, OptionParser, Array[String]]
     def validate_options: (options options) -> void
     def threshold_status: (Array[Entry] entries, Rational? threshold) -> Integer

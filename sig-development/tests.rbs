@@ -58,6 +58,8 @@ class BatchProcessTest < Minitest::Test
   def test_partial_start_failure_reaps_children_before_serial_fallback: () -> void
   def test_interrupt_cancels_and_reaps_running_workers: () -> void
   def test_child_close_failure_does_not_run_inherited_exit_hooks: () -> void
+  def test_cli_workers_preserve_reports_snapshots_and_threshold_statuses: () -> void
+  def test_cli_worker_failures_preserve_the_previous_snapshot: () -> void
 end
 
 class CLITest < Minitest::Test
@@ -86,6 +88,7 @@ class CLITest < Minitest::Test
   def test_combines_source_roots_paths_and_fragment_filters_without_duplicates: () -> void
   def test_errors_preserve_previous_snapshot: () -> void
   def test_help_version_invalid_options_and_empty_selection: () -> void
+  def test_worker_option_preserves_reports_and_rejects_invalid_counts: () -> void
   def test_coverage_command_must_succeed_and_refresh_its_report: () -> void
   def test_changed_files_include_staged_unstaged_untracked_and_renamed_paths: () -> void
   def test_changed_outside_a_repository_fails_without_replacing_snapshot: () -> void

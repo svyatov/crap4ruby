@@ -33,7 +33,7 @@ module Crap4Ruby
 
       files = Discovery.call(root: root, source_roots: options[:source_roots], paths: paths, changed: options[:changed])
       coverage = load_coverage(options, root) unless options[:no_coverage] || files.empty?
-      entries = Report.sorted(analyze(files, coverage))
+      entries = Report.sorted(Batch.call(files, coverage, jobs: options[:jobs]))
       unless options[:no_save]
         path = Report.write(entries, root: root)
         @stderr.puts("Wrote #{path}")
@@ -46,10 +46,6 @@ module Crap4Ruby
     end
 
     private
-
-    def analyze(files, coverage)
-      Batch.call(files, coverage)
-    end
 
     # Removes parsed options from arguments and returns the remaining path selectors.
     #
@@ -76,6 +72,12 @@ module Crap4Ruby
         end
         cli.on("--no-coverage", "Complexity only; coverage and CRAP are N/A") { options[:no_coverage] = true }
         cli.on("--no-save", "Print results without writing .metrics/crap.edn") { options[:no_save] = true }
+        cli.on("--jobs N", Integer, "Worker processes (default: automatic; 1 disables workers)") do |jobs|
+          # @type var jobs: Integer
+          raise OptionParser::InvalidArgument, "jobs must be positive" if jobs < 1
+
+          options[:jobs] = jobs
+        end
         cli.on("--use-existing-coverage", "Read reports without running tests (the default)") do
           options[:existing] = true
         end
