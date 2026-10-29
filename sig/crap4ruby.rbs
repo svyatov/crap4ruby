@@ -82,18 +82,19 @@ module Crap4Ruby
   end
 
   module Batch
-    type worker = [IO, Integer?]
+    type worker = [IO, Integer?, IO]
     def self.call: (Array[String] files, Coverage? coverage, ?jobs: Integer?) -> Array[Entry]
     def self.worker_count: (Integer size, Integer? jobs) -> Integer
     def self.serial: (Array[String] files, Coverage? coverage) -> Array[Entry]
     def self.parallel: (Array[String] files, Coverage? coverage, Integer count) -> Array[Entry]
     def self.start_worker: (Array[String] files, Coverage? coverage, Array[worker] workers) -> void
-    def self.run_child: (IO reader, IO writer, Array[String] files, Coverage? coverage, Array[worker] workers) -> void
+    def self.run_child: (Array[IO] pipes, Array[String] files, Coverage? coverage, Array[worker] workers) -> void
     def self.child_result: (Array[String] files, Coverage? coverage) -> (Array[Entry] | StandardError)
     def self.receive: (worker worker) -> (Array[Entry] | StandardError)
     def self.decode: (String data) -> Object
     def self.cleanup: (Array[worker] workers) -> void
-    def self.terminate: (Integer pid) -> void
+    def self.reap: (worker worker) -> Process::Status?
+    def self.close_pipe: (IO? pipe) -> void
   end
 
   module Report

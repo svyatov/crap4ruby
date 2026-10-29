@@ -29,7 +29,6 @@
   {:name "body_end_node", :namespace "Crap4Ruby::Analyzer", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "discover_call", :namespace "Crap4Ruby::Analyzer", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "self.call", :namespace "Crap4Ruby::Batch", :complexity 4, :coverage 100.0, :crap 4.0}
-  {:name "self.cleanup", :namespace "Crap4Ruby::Batch", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "validate_options", :namespace "Crap4Ruby::CLI", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "add_suite", :namespace "Crap4Ruby::Coverage", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "initialize", :namespace "Crap4Ruby::Coverage", :complexity 4, :coverage 100.0, :crap 4.0}
@@ -37,12 +36,14 @@
   {:name "self.call", :namespace "Crap4Ruby::Score", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "discover_class", :namespace "Crap4Ruby::Analyzer", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "method_owner", :namespace "Crap4Ruby::Analyzer", :complexity 3, :coverage 100.0, :crap 3.0}
+  {:name "self.cleanup", :namespace "Crap4Ruby::Batch", :complexity 3, :coverage 100.0, :crap 3.0}
+  {:name "self.close_pipe", :namespace "Crap4Ruby::Batch", :complexity 3, :coverage 100.0, :crap 3.0}
+  {:name "self.reap", :namespace "Crap4Ruby::Batch", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "self.serial", :namespace "Crap4Ruby::Batch", :complexity 3, :coverage 100.0, :crap 3.0}
-  {:name "self.terminate", :namespace "Crap4Ruby::Batch", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "self.changed_files", :namespace "Crap4Ruby::Discovery", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "self.edn", :namespace "Crap4Ruby::Report", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "self.number", :namespace "Crap4Ruby::Report", :complexity 3, :coverage 100.0, :crap 3.0}
-  {:name "self.start_worker", :namespace "Crap4Ruby::Batch", :complexity 2, :coverage 85.7143, :crap 2.0117}
+  {:name "self.start_worker", :namespace "Crap4Ruby::Batch", :complexity 2, :coverage 90.9091, :crap 2.003}
   {:name "boundary?", :namespace "Crap4Ruby::Analyzer", :complexity 2, :coverage 100.0, :crap 2.0}
   {:name "call", :namespace "Crap4Ruby::Analyzer", :complexity 2, :coverage 100.0, :crap 2.0}
   {:name "load_coverage", :namespace "Crap4Ruby::CLI", :complexity 2, :coverage 100.0, :crap 2.0}

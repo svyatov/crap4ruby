@@ -60,6 +60,8 @@ class BatchProcessTest < Minitest::Test
   def test_child_close_failure_does_not_run_inherited_exit_hooks: () -> void
   def test_cli_workers_preserve_reports_snapshots_and_threshold_statuses: () -> void
   def test_cli_worker_failures_preserve_the_previous_snapshot: () -> void
+  def test_external_child_reaper_does_not_break_results_or_receive_signals: () -> void
+  def test_interrupt_after_wait_does_not_signal_a_reaped_pid: () -> void
 end
 
 class CLITest < Minitest::Test

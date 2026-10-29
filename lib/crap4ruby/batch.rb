@@ -58,30 +58,45 @@ module Crap4Ruby
       end
 
       def start_worker(files, coverage, workers)
-        reader, writer = IO.pipe
+        # @type var pipes: Array[IO]
+        pipes = []
         pid = nil #: Integer?
         begin
+          2.times { pipes.concat(IO.pipe) }
           pid = Process.fork do
-            run_child(reader, writer, files, coverage, workers)
+            run_child(pipes, files, coverage, workers)
           end
-          workers << [reader, pid]
+          workers << [pipes.fetch(0), pid, pipes.fetch(3)]
         ensure
-          writer.close
-          reader.close unless pid
+          close_pipe(pipes[1])
+          close_pipe(pipes[2])
+          unless pid
+            close_pipe(pipes[0])
+            close_pipe(pipes[3])
+          end
         end
       end
 
-      def run_child(reader, writer, files, coverage, workers)
+      def run_child(pipes, files, coverage, workers)
         # @type var status: Integer
         status = 1
-        workers.each { |worker| worker[0].close }
-        reader.close
+        workers.each do |worker|
+          close_pipe(worker[0])
+          close_pipe(worker[2])
+        end
+        close_pipe(pipes.fetch(0))
+        close_pipe(pipes.fetch(3))
+        cancellation = pipes.fetch(2)
+        Thread.new do
+          cancellation.read
+          Process.exit!(1)
+        end
         result = child_result(files, coverage)
-        Marshal.dump(result, writer)
+        Marshal.dump(result, pipes.fetch(1))
         status = 0
       ensure
         begin
-          writer.close
+          close_pipe(pipes[1])
         ensure
           Process.exit!(status)
         end
@@ -95,13 +110,10 @@ module Crap4Ruby
 
       def receive(worker)
         # @type var reader: IO
-        reader, pid = worker
-        raise Error, "analysis worker was already collected" unless pid
-
+        reader = worker[0]
         data = reader.read
-        _, status = Process.wait2(pid)
-        worker[1] = nil
-        unless status.success?
+        status = reap(worker)
+        if status && !status.success?
           raise Error,
             "analysis worker failed (exit #{status.exitstatus || "signal #{status.termsig}"})"
         end
@@ -126,27 +138,34 @@ module Crap4Ruby
       def cleanup(workers)
         Thread.handle_interrupt(Exception => :never) do
           workers.each do |worker|
-            worker[0].close unless worker[0].closed?
-            pid = worker[1]
-            next unless pid
-
-            terminate(pid)
-            worker[1] = nil
+            close_pipe(worker[2])
+            close_pipe(worker[0])
           end
+          # Close every cancellation channel before waiting for any worker.
+          # rubocop:disable-next Style/CombinableLoops
+          workers.each { |worker| reap(worker) }
         end
       end
 
-      def terminate(pid)
-        begin
-          Process.kill("KILL", pid)
-        rescue Errno::ESRCH
-          # The worker exited before cleanup.
+      def reap(worker)
+        pid = worker[1]
+        return unless pid
+
+        Thread.handle_interrupt(Exception => :never) do
+          # @type var status: Process::Status?
+          begin
+            _, status = Process.wait2(pid)
+          rescue Errno::ECHILD
+            # A host's SIGCHLD handler may have consumed the exit status.
+            status = nil
+          end
+          worker[1] = nil
+          status
         end
-        begin
-          Process.wait(pid)
-        rescue Errno::ECHILD
-          # The worker has already been reaped.
-        end
+      end
+
+      def close_pipe(pipe)
+        pipe.close if pipe && !pipe.closed?
       end
     end
   end

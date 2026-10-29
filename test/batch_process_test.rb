@@ -438,4 +438,72 @@ class BatchProcessTest < Minitest::Test
       assert_equal "previous snapshot", result.fetch(:snapshot)
     end
   end
+
+  def test_external_child_reaper_does_not_break_results_or_receive_signals
+    skip "fork is unavailable" unless Process.respond_to?(:fork)
+
+    run_program(<<~RUBY) do |output, error, status|
+      signals = []
+      Process.define_singleton_method(:kill) { |signal, pid| signals << [signal, pid]; 0 }
+      Signal.trap("CHLD") do
+        begin
+          loop { break unless Process.wait(-1, Process::WNOHANG) }
+        rescue Errno::ECHILD
+        end
+      end
+      Crap4Ruby::Batch.singleton_class.prepend(Module.new do
+        def receive(worker)
+          sleep(0.05)
+          super
+        end
+      end)
+      failure = nil
+      entries = []
+      begin
+        entries = Crap4Ruby::Batch.call(files, nil, jobs: 2)
+      rescue StandardError => error
+        failure = error.class.name
+      end
+      puts JSON.generate(failure: failure, signals: signals.size, names: entries.map(&:name))
+    RUBY
+      assert status.success?, "#{output}\n#{error}"
+      # @type var result: { failure: String?, signals: Integer, names: Array[String] }
+      result = JSON.parse(output, symbolize_names: true)
+
+      assert_nil result.fetch(:failure)
+      assert_equal 0, result.fetch(:signals)
+      assert_equal %w[second first], result.fetch(:names)
+    end
+  end
+
+  def test_interrupt_after_wait_does_not_signal_a_reaped_pid
+    skip "fork is unavailable" unless Process.respond_to?(:fork)
+
+    run_program(<<~RUBY) do |output, error, status|
+      signals = []
+      Process.define_singleton_method(:kill) { |signal, pid| signals << [signal, pid]; 0 }
+      Process.singleton_class.prepend(Module.new do
+        def wait2(pid, flags = 0)
+          result = super
+          unless @interrupted
+            @interrupted = true
+            raise Interrupt
+          end
+          result
+        end
+      end)
+      begin
+        Crap4Ruby::Batch.call(files, nil, jobs: 2)
+        abort "analysis was not interrupted"
+      rescue Interrupt
+      end
+      puts JSON.generate(signals: signals.size)
+    RUBY
+      assert status.success?, "#{output}\n#{error}"
+      # @type var result: { signals: Integer }
+      result = JSON.parse(output, symbolize_names: true)
+
+      assert_equal 0, result.fetch(:signals)
+    end
+  end
 end

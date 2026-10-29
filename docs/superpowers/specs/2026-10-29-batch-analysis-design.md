@@ -34,13 +34,15 @@ Partition files into contiguous, nonempty chunks in discovery order. Fork only a
 
 Use Ruby Marshal only for data from these child processes. No serialized payload from source files or an external service is accepted. Workers send either entries or the captured analysis exception. Expected parse and filesystem errors retain their exception class and diagnostic message. Read all workers' results and select the first analysis error in original chunk order, preserving serial first-error behavior.
 
-Children do not write reports, snapshots, or normal diagnostics. They close their pipe and use `exit!`, so inherited exit hooks do not run. The parent waits for every child. There is no persistent pool, thread scheduler, or cross-run cache.
+Children do not write reports, snapshots, or normal diagnostics. They close their result pipe and use `exit!`, so inherited exit hooks do not run. A second private pipe is a cancellation channel; one child monitor thread exits the worker when the parent closes that channel. The parent waits for every child whose status remains available. There is no persistent pool, thread scheduler, or cross-run cache.
 
 ## Failure and cancellation
 
 If fork is unavailable or a worker cannot be started because of a resource-limit error, close pipes, terminate and reap already-started workers, then run the read-only analysis serially. Do not retry analysis failures in a different mode.
 
-A worker that exits without a complete payload, returns malformed data, or exits unsuccessfully produces a concise `Crap4Ruby::Error`. Do not publish partial entries or replace the snapshot. An ensure block closes every parent pipe and terminates and reaps all remaining owned children on errors, interrupts, or early exits. Cancellation must not wait for unfinished analysis. Cleanup targets only PIDs created by this call.
+A worker that exits without a complete payload, returns malformed data, or has an observed unsuccessful exit produces a concise `Crap4Ruby::Error`. Do not publish partial entries or replace the snapshot. If a host's SIGCHLD handler consumes a worker's exit status, collection still requires a complete, validated result payload. The host handler is not changed.
+
+An ensure block closes every parent pipe and cancels all workers before waiting on errors, interrupts, or early exits. Cancellation must not wait for unfinished analysis. Cleanup never sends a signal to a saved PID: a host may already have reaped that PID, and the operating system may reuse it. A private pipe identifies the owned worker without that race. This implementation refinement addresses the independently reproduced review finding F1; the Batch.call interface remains unchanged.
 
 ## Verification
 
