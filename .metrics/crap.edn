@@ -21,7 +21,7 @@
   {:name "safe_navigation?", :namespace "Crap4Ruby::Analyzer", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "run_coverage", :namespace "Crap4Ruby::CLI", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "self.selection_roots", :namespace "Crap4Ruby::Discovery", :complexity 5, :coverage 100.0, :crap 5.0}
-  {:name "body_end_line", :namespace "Crap4Ruby::Analyzer", :complexity 4, :coverage 100.0, :crap 4.0}
+  {:name "body_end_node", :namespace "Crap4Ruby::Analyzer", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "discover_call", :namespace "Crap4Ruby::Analyzer", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "validate_options", :namespace "Crap4Ruby::CLI", :complexity 4, :coverage 100.0, :crap 4.0}
   {:name "add_suite", :namespace "Crap4Ruby::Coverage", :complexity 4, :coverage 100.0, :crap 4.0}

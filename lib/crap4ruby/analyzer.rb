@@ -272,7 +272,7 @@ module Crap4Ruby
       return nil if start.location.start_line <= after
 
       excluded = [] #: Array[Integer]
-      last_line = body_end_line(node, excluded)
+      last_line = body_end_node(node, excluded).location.end_line
       lines = (start.location.start_line..last_line).to_a - excluded
       return nil if lines.include?(ending.end_line) && trailing_code?(ending)
 
@@ -285,14 +285,15 @@ module Crap4Ruby
     end
 
     # Heredoc interpolations can extend beyond their parent node's location.
-    def body_end_line(node, excluded)
-      last_line = node.location.end_line
+    # Compare byte offsets to defer line resolution until a range is needed.
+    def body_end_node(node, excluded)
+      last = node
       node.compact_child_nodes.each do |child|
-        child_line = body_end_line(child, excluded)
-        last_line = child_line if child_line > last_line
+        child_end = body_end_node(child, excluded)
+        last = child_end if child_end.end_offset > last.end_offset
       end
-      excluded.concat((node.location.start_line..last_line).to_a) if boundary?(node)
-      last_line
+      excluded.concat((node.location.start_line..last.location.end_line).to_a) if boundary?(node)
+      last
     end
   end
 end

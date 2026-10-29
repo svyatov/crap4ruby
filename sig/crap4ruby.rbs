@@ -51,7 +51,7 @@ module Crap4Ruby
     def boundary?: (Prism::Node node) -> bool
     def body_lines: (Prism::Node? node, after: Integer, ending: Prism::Location) -> Array[Integer]?
     def trailing_code?: (Prism::Location location) -> bool
-    def body_end_line: (Prism::Node node, Array[Integer] excluded) -> Integer
+    def body_end_node: (Prism::Node node, Array[Integer] excluded) -> Prism::Node
   end
 
   type json = nil | bool | Integer | Float | String | Array[json] | Hash[String, json]
