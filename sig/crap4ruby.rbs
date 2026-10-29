@@ -32,7 +32,7 @@ module Crap4Ruby
 
   class Analyzer
     @coverage: bool
-    ITERATING_METHODS: Array[Symbol]
+    ITERATING_METHODS: Hash[Symbol, bool]
     def initialize: (?coverage: bool) -> void
     def call: (String source, path: String) -> Array[MethodInfo]
     private

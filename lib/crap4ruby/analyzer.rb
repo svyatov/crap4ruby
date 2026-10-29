@@ -17,7 +17,7 @@ module Crap4Ruby
       repeated_combination select! sort! each_key each_pair each_value
       fetch fetch_values has_key? merge merge! transform_keys transform_keys!
       transform_values transform_values!
-    ].freeze
+    ].to_h { |name| [name, true] }.freeze
 
     # Configures whether analysis collects body lines for coverage scoring.
     #
@@ -251,7 +251,7 @@ module Crap4Ruby
     end
 
     def iteration?(node)
-      return false unless node.is_a?(Prism::CallNode) && ITERATING_METHODS.include?(node.name)
+      return false unless node.is_a?(Prism::CallNode) && ITERATING_METHODS.key?(node.name)
 
       block = node.block
       return false unless block
