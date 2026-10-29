@@ -79,7 +79,10 @@ module Crap4Ruby
 
       # Every element was validated above; Steep cannot narrow an array through all?.
       lines = lines #: Array[Integer?]
-      previous = @files[key] || []
+      # @type var previous: Array[Integer?]?
+      previous = @files[key]
+      return @files[key] = lines.dup unless previous
+
       @files[key] = Array.new([previous.size, lines.size].max) do |index|
         [previous[index], lines[index]].compact.max
       end
