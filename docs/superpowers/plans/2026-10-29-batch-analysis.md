@@ -1,6 +1,6 @@
 # Automatic batch analysis implementation plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Reduce complete CLI latency on large real projects with automatic bounded worker processes and exact serial behavior.
 
@@ -34,11 +34,11 @@
 
 **Interfaces:** Consume `Analyzer#call(source, path:)`, `Score.call(method, coverage)`, and `Coverage#fraction`. Produce `Batch.call(files, coverage, jobs: nil) -> Array[Entry]`. Initially preserve serial execution; the following task adds the selected execution policy.
 
-- [ ] Write `test_serial_batch_preserves_order_and_coverage`: analyze two temporary files in reversed filename order, compare complete entries to the current Analyzer/Score loop, and check exact partial-coverage Rational scores. Add empty input and parse/filesystem error assertions.
-- [ ] Run `bundle exec ruby -Itest test/batch_test.rb`; require failure because Batch is undefined.
-- [ ] Implement the serial `Batch.call`, wire its require and RBS signatures, and delegate the existing CLI analysis loop to it without changing CLI options.
-- [ ] Run `bundle exec ruby -Itest test/batch_test.rb`, `bundle exec rake test lint types crap docs:check`; require exact entry equality and all gates passing.
-- [ ] Commit as `refactor(batch): extract ordered file analysis`.
+- [x] Write `test_serial_batch_preserves_order_and_coverage`: analyze two temporary files in reversed filename order, compare complete entries to the current Analyzer/Score loop, and check exact partial-coverage Rational scores. Add empty input and parse/filesystem error assertions.
+- [x] Run `bundle exec ruby -Itest test/batch_test.rb`; require failure because Batch is undefined.
+- [x] Implement the serial `Batch.call`, wire its require and RBS signatures, and delegate the existing CLI analysis loop to it without changing CLI options.
+- [x] Run `bundle exec ruby -Itest test/batch_test.rb`, `bundle exec rake test lint types crap docs:check`; require exact entry equality and all gates passing.
+- [x] Commit as `refactor(batch): extract ordered file analysis`.
 
 ## Task 2: Add bounded workers and lifecycle guarantees
 
@@ -46,12 +46,12 @@
 
 **Interfaces:** Extend Task 1's `Batch.call(files, coverage, jobs: nil)`. Private helpers own worker-count selection, serial analysis, fork startup, ordered result collection, child payload generation, and cleanup. No caller receives worker handles.
 
-- [ ] Add failing tests for serial/parallel complete-entry equality, actual child execution, deterministic ordering, automatic cap and threshold, explicit worker counts, unsupported-fork and multithreaded fallbacks. Reject nonpositive direct `jobs` arguments with `ArgumentError` before starting workers.
-- [ ] Add bounded subprocess tests for payloads larger than pipe buffers, two chunks failing in different orders, filesystem errors, malformed/missing payloads, nonzero exits, partial-start resource failure, and interrupt cleanup. Assert no pending child remains using owned PID checks and `waitpid` behavior; do not inspect unrelated processes.
-- [ ] Run both batch test files and confirm they fail on missing parallel behavior, not fixture errors.
-- [ ] Implement contiguous nonempty chunks, private pipes, typed Marshal payloads, and ordered parent collection. Preserve exception classes/messages for expected analysis errors. Handle startup `EAGAIN`/`ENOMEM` by cleaning up then falling back to serial. Convert protocol and worker-exit failures to `Crap4Ruby::Error`. Ensure cleanup closes pipes and terminates/reaps pending children without waiting for unfinished work.
-- [ ] Run both batch test files repeatedly with different test seeds, then `bundle exec rake test lint types crap docs:check`. Require bounded completion, no orphaned children, full type coverage, and method CRAP <= 10.
-- [ ] Commit as `feat(batch): analyze large inputs with bounded workers`.
+- [x] Add failing tests for serial/parallel complete-entry equality, actual child execution, deterministic ordering, automatic cap and threshold, explicit worker counts, unsupported-fork and multithreaded fallbacks. Reject nonpositive direct `jobs` arguments with `ArgumentError` before starting workers.
+- [x] Add bounded subprocess tests for payloads larger than pipe buffers, two chunks failing in different orders, filesystem errors, malformed/missing payloads, nonzero exits, partial-start resource failure, and interrupt cleanup. Assert no pending child remains using owned PID checks and `waitpid` behavior; do not inspect unrelated processes.
+- [x] Run both batch test files and confirm they fail on missing parallel behavior, not fixture errors.
+- [x] Implement contiguous nonempty chunks, private pipes, typed Marshal payloads, and ordered parent collection. Preserve exception classes/messages for expected analysis errors. Handle startup `EAGAIN`/`ENOMEM` by cleaning up then falling back to serial. Convert protocol and worker-exit failures to `Crap4Ruby::Error`. Ensure cleanup closes pipes and terminates/reaps pending children without waiting for unfinished work.
+- [x] Run both batch test files repeatedly with different test seeds, then `bundle exec rake test lint types crap docs:check`. Require bounded completion, no orphaned children, full type coverage, and method CRAP <= 10.
+- [x] Commit as `feat(batch): analyze large inputs with bounded workers`.
 
 ## Task 3: Expose the serial override and preserve CLI failure behavior
 
@@ -59,11 +59,11 @@
 
 **Interfaces:** Parse `--jobs N` as a positive Integer and pass `jobs:` to `Batch.call`. Absence means automatic selection. Help/version and unrelated coverage options retain their behavior.
 
-- [ ] Add failing CLI tests for help text, `--jobs 1`, `--jobs 2`, invalid zero/negative/noninteger arguments, and exact parallel-versus-serial table/snapshot/status equality.
-- [ ] Add subprocess integration cases where worker analysis fails or exits abnormally; assert status 1, one useful diagnostic, no partial report, and preservation of an existing snapshot. Check threshold statuses 0, 1, and 2 against serial execution.
-- [ ] Run focused CLI and integration tests and confirm the new option is the cause of failure.
-- [ ] Implement option parsing, signature changes, delegation, and concise documentation of automatic eligibility, resource cost, fallbacks, and the serial override.
-- [ ] Run `bundle exec rake`; require lint, Steep, 100% type coverage, tests, CRAP, YARD checks, and both dependency audits passing. Commit as `feat(cli): expose batch worker control`.
+- [x] Add failing CLI tests for help text, `--jobs 1`, `--jobs 2`, invalid zero/negative/noninteger arguments, and exact parallel-versus-serial table/snapshot/status equality.
+- [x] Add subprocess integration cases where worker analysis fails or exits abnormally; assert status 1, one useful diagnostic, no partial report, and preservation of an existing snapshot. Check threshold statuses 0, 1, and 2 against serial execution.
+- [x] Run focused CLI and integration tests and confirm the new option is the cause of failure.
+- [x] Implement option parsing, signature changes, delegation, and concise documentation of automatic eligibility, resource cost, fallbacks, and the serial override.
+- [x] Run `bundle exec rake`; require lint, Steep, 100% type coverage, tests, CRAP, YARD checks, and both dependency audits passing. Commit as `feat(cli): expose batch worker control`.
 
 ## Task 4: Establish crossover, real-project gains, and independent evidence
 
@@ -71,8 +71,8 @@
 
 **Interfaces:** Use the committed benchmark runner's clean child boot, alternating order, input/library hash guards, and byte-for-byte report check. Compare current default execution against both `6a1701b` and `19942c2`; independently compare current `--jobs 1` with its default.
 
-- [ ] Measure real Forem and Les file subsets around 16, 32, 64, and 128 files, plus the full selections. Include fork startup and result transfer. Use seven alternating measured samples after warmup and retain all input and output hashes. Set the automatic crossover from those results.
-- [ ] Run complete CLI comparisons serially on Les with and without coverage, Forem, Steep, and YARD. Require clear latency gains on eligible large inputs and no meaningful regression for serial/small input paths. Do not compare medians from separate campaigns as an isolated improvement.
-- [ ] Capture total CPU time and separately sampled summed RSS, with shared-page and polling limitations. Record all raw samples and distinguish phase, complete CLI, and memory-probe data.
-- [ ] Request independent QA and whole-branch review focused on parity, descriptor inheritance, deadlocks, error ordering, cancellation, fallback, supported Ruby versions, and the exact documented measurements. Fix verified findings and rerun affected checks.
-- [ ] Run `bundle exec rake`, validate saved evidence against originals, and commit as `test(performance): verify automatic batch analysis`. Remove throwaway scripts, preserve evidence, and confirm a clean worktree.
+- [x] Measure real Forem and Les file subsets around 16, 32, 64, and 128 files, plus the full selections. Include fork startup and result transfer. Use seven alternating measured samples after warmup and retain all input and output hashes. Set the automatic crossover from those results.
+- [x] Run complete CLI comparisons serially on Les with and without coverage, Forem, Steep, and YARD. Require clear latency gains on eligible large inputs and no meaningful regression for serial/small input paths. Do not compare medians from separate campaigns as an isolated improvement.
+- [x] Capture total CPU time and separately sampled summed RSS, with shared-page and polling limitations. Record all raw samples and distinguish phase, complete CLI, and memory-probe data.
+- [x] Request independent QA and whole-branch review focused on parity, descriptor inheritance, deadlocks, error ordering, cancellation, fallback, supported Ruby versions, and the exact documented measurements. Fix verified findings and rerun affected checks.
+- [x] Run `bundle exec rake`, validate saved evidence against originals, and commit as `test(performance): verify automatic batch analysis`. Remove throwaway scripts, preserve evidence, and confirm a clean worktree.

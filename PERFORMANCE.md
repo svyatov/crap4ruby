@@ -4,7 +4,7 @@ The benchmark compares complete CLI runs on local project checkouts. It checks r
 
 ## Measured results (2026-10-29)
 
-Baseline: `19942c2` (0.2.1). Candidate: `2f23c80`. Runtime: Ruby 4.0.9, Prism 1.9.0, arm64 macOS.
+Baseline: `19942c2` (0.2.1). CLI candidate: `2f23c80`. Final EDN allocation follow-up: `3dd909d`, measured separately below. Runtime: Ruby 4.0.9, Prism 1.9.0, arm64 macOS.
 
 Each variant has seven measured subprocess runs after one excluded warmup. Variant order alternates, and runs execute serially with warm filesystem caches.
 
@@ -93,6 +93,17 @@ The formatter reduced phase time by 39% and allocated objects by 67%. Scoring re
 
 Independent differential checks matched 146 formatter cases and 74 scoring cases on Ruby 3.3.11 and 4.0.9. These include encoding and control characters, exact Rational values, partial coverage, and large integers.
 
+#### EDN allocation follow-up
+
+Commit `3dd909d` trims trailing zeros in the newly formatted number string in place. This avoids copying that string. Each variant runs 100 EDN formatting passes after 100 excluded warmup passes, in seven fresh subprocesses with alternating order. Timing excludes library loading, analysis, sorting, and snapshot writes. The baseline is `af2f770`.
+
+| Input | Baseline median | Candidate median | Baseline allocated objects | Candidate allocated objects |
+| --- | ---: | ---: | ---: | ---: |
+| Les, 1,045 methods with coverage | 0.1696 s | 0.1699 s | 1,701,309 | 1,517,509 |
+| Forem, 5,765 methods without coverage | 0.3711 s | 0.3687 s | 2,894,109 | 2,894,109 |
+
+Les report allocations decreased by 10.8%. Forem has no numeric coverage or scores to trim, so its allocation count is unchanged. Timing ranges overlap for both inputs; these results establish no elapsed-time improvement. All EDN hashes match, and all selected source and coverage hashes remain unchanged. [Raw samples and QA evidence](benchmark/results/2026-10-29-edn.jsonl) retain every duration and allocation count. Differential checks preserve 4,012 numeric cases on each of Ruby 3.3.11, 3.4.9, and 4.0.9. Additional EDN checks cover escaping, empty reports, exact Rational values, negative zero, and nonfinite floats on Ruby 3.3.11 and 3.4.9.
+
 ### Automatic batch analysis
 
 Selections of at least 64 files use up to four worker processes, bounded by available processors. Smaller selections, unsupported fork platforms, and hosts with other live Ruby threads remain serial. `--jobs 1` forces serial execution. Result order and all report writes remain controlled by the parent.
@@ -137,7 +148,7 @@ Review found a stale-PID signaling race when a host reaped worker statuses. The 
 
 A separate [process-group SIGINT probe](benchmark/results/2026-10-29-batch-sigint.json) delivered SIGINT after all four workers started. The CLI terminated on signal 2, preserved its existing snapshot, emitted no report, and left no processes in its group.
 
-Small-input CLI comparisons against `6a1701b` remained serial. Medians for 16 and 32 files ranged from effectively unchanged to 4.0% slower, with overlapping timing ranges. The largest median difference was 5.1 ms. Small-input startup overhead and EDN serialization remain profiling candidates; these results do not establish a performance maximum.
+Small-input CLI comparisons against `6a1701b` remained serial. Medians for 16 and 32 files ranged from effectively unchanged to 4.0% slower, with overlapping timing ranges. The largest median difference was 5.1 ms. A follow-up rejected deferred loading of `Etc`: `Tempfile` loads it transitively, and repeated load and CLI measurements showed no clear benefit. [The rejected experiment](benchmark/results/2026-10-29-startup-screen.json) retains all samples and its prototype description. EDN serialization was screened separately above. These measurements do not establish a performance maximum.
 
 ### Batch screening prototype
 
