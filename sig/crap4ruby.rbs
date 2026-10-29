@@ -31,14 +31,16 @@ module Crap4Ruby
   end
 
   class Analyzer
-    ITERATING_METHODS: Array[Symbol]
+    @coverage: bool
+    ITERATING_METHODS: Hash[Symbol, bool]
+    def initialize: (?coverage: bool) -> void
     def call: (String source, path: String) -> Array[MethodInfo]
     private
-    def discover: (Prism::Node? node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
-    def discover_class: (Prism::ClassNode | Prism::ModuleNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
-    def discover_call: (Prism::CallNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
-    def discover_method: (Prism::DefNode node, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
-    def discover_block: (Prism::BlockNode block, String name, Array[String] scope, bool singleton, String path) -> Array[MethodInfo]
+    def discover: (Prism::Node? node, Array[String] scope, bool singleton, String path, ?Array[MethodInfo] methods) -> Array[MethodInfo]
+    def discover_class: (Prism::ClassNode | Prism::ModuleNode node, Array[String] scope, bool singleton, String path, Array[MethodInfo] methods) -> void
+    def discover_call: (Prism::CallNode node, Array[String] scope, bool singleton, String path, Array[MethodInfo] methods) -> void
+    def discover_method: (Prism::DefNode node, Array[String] scope, bool singleton, String path, Array[MethodInfo] methods) -> void
+    def discover_block: (Prism::BlockNode block, String name, Array[String] scope, bool singleton, String path, Array[MethodInfo] methods) -> void
     def defined_name: (Prism::Node node) -> String?
     def method_owner: (Prism::DefNode node, Array[String] scope) -> Array[String]?
     def qualify: (Prism::Node? node, Array[String] scope, ?declaration: bool) -> Array[String]?
@@ -51,7 +53,7 @@ module Crap4Ruby
     def boundary?: (Prism::Node node) -> bool
     def body_lines: (Prism::Node? node, after: Integer, ending: Prism::Location) -> Array[Integer]?
     def trailing_code?: (Prism::Location location) -> bool
-    def body_end_line: (Prism::Node node, Array[Integer] excluded) -> Integer
+    def body_end_node: (Prism::Node node, Array[Integer] excluded) -> Prism::Node
   end
 
   type json = nil | bool | Integer | Float | String | Array[json] | Hash[String, json]
@@ -79,6 +81,22 @@ module Crap4Ruby
     def self.call: (MethodInfo method, Coverage? coverage) -> Entry
   end
 
+  module Batch
+    type worker = [IO, Integer?, IO]
+    def self.call: (Array[String] files, Coverage? coverage, ?jobs: Integer?) -> Array[Entry]
+    def self.worker_count: (Integer size, Integer? jobs) -> Integer
+    def self.serial: (Array[String] files, Coverage? coverage) -> Array[Entry]
+    def self.parallel: (Array[String] files, Coverage? coverage, Integer count) -> Array[Entry]
+    def self.start_worker: (Array[String] files, Coverage? coverage, Array[worker] workers) -> void
+    def self.run_child: (Array[IO] pipes, Array[String] files, Coverage? coverage, Array[worker] workers) -> void
+    def self.child_result: (Array[String] files, Coverage? coverage) -> (Array[Entry] | StandardError)
+    def self.receive: (worker worker) -> (Array[Entry] | StandardError)
+    def self.decode: (String data) -> Object
+    def self.cleanup: (Array[worker] workers) -> void
+    def self.reap: (worker worker) -> Process::Status?
+    def self.close_pipe: (IO? pipe) -> void
+  end
+
   module Report
     def self.sorted: (Array[Entry] entries) -> Array[Entry]
     def self.table: (Array[Entry] entries) -> String
@@ -95,13 +113,13 @@ module Crap4Ruby
 
   class CLI
     type options = { root: String, source_roots: Array[String], changed: bool, coverage: String,
-      ?help: bool, ?version: bool, ?no_coverage: bool, ?no_save: bool, ?existing: bool, ?command: String, ?threshold: Rational }
+      ?help: bool, ?version: bool, ?no_coverage: bool, ?no_save: bool, ?existing: bool, ?command: String,
+      ?threshold: Rational, ?jobs: Integer }
     @stdout: _Output
     @stderr: _Output
     def initialize: (?stdout: _Output, ?stderr: _Output) -> void
     def run: (Array[String] arguments) -> Integer
     private
-    def analyze: (Array[String] files, Coverage? coverage) -> Array[Entry]
     def parse_options: (Array[String] arguments) -> [options, OptionParser, Array[String]]
     def validate_options: (options options) -> void
     def threshold_status: (Array[Entry] entries, Rational? threshold) -> Integer

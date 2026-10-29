@@ -12,8 +12,12 @@ module Crap4Ruby
     def self.call(method, coverage)
       fraction = coverage&.fraction(method)
       if fraction
-        uncovered = 1 - fraction
-        crap = (method.complexity * method.complexity * uncovered * uncovered * uncovered) + method.complexity
+        # Combine integer terms before constructing the exact score.
+        denominator = fraction.denominator
+        uncovered = denominator - fraction.numerator
+        cube = denominator * denominator * denominator
+        complexity = method.complexity
+        crap = Rational((complexity * complexity * uncovered * uncovered * uncovered) + (complexity * cube), cube)
       end
       Entry.new(method.name, method.namespace, method.complexity, fraction && (fraction * 100).to_f, crap, method.path)
     end

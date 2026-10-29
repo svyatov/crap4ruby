@@ -1,0 +1,12 @@
+# Fork-related APIs missing or incomplete in the bundled core signatures.
+module Process
+  def self.fork: () { () -> void } -> Integer
+  def self.exit!: (?Integer status) -> bot
+end
+
+class Thread
+  def self.list: () -> Array[Thread]
+               | ...
+  def self.handle_interrupt: [T] (Hash[Class, Symbol] mask) { () -> T } -> T
+                          | ...
+end

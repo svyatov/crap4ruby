@@ -5,6 +5,14 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+### Added
+
+- Automatically analyze large selections with bounded worker processes. Add `--jobs N` to set the worker count or use `--jobs 1` for serial analysis, with serial fallback on unsupported or multithreaded hosts.
+
+### Changed
+
+- Reduce analyzer, coverage-loading, discovery, scoring, and table-formatting overhead while preserving analysis results and report output. See [PERFORMANCE.md](PERFORMANCE.md) for real-project measurements.
+
 ## [0.2.1] - 2026-10-29
 
 ### Added

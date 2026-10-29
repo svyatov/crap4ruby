@@ -1,4 +1,6 @@
 class AnalyzerTest < Minitest::Test
+  def test_can_skip_coverage_lines_while_preserving_methods_and_complexity: () -> void
+  def test_counts_boolean_assignments_for_each_ruby_target: () -> void
   def analyze: (String source) -> Array[Crap4Ruby::MethodInfo]
   def test_finds_a_method_without_executing_source: () -> void
   def test_resolves_namespaces_and_singleton_methods: () -> void
@@ -21,6 +23,45 @@ class AnalyzerTest < Minitest::Test
   def test_finds_methods_in_superclass_expressions_in_the_surrounding_scope: () -> void
   def test_skips_dynamic_namespace_subtrees_without_executing_them: () -> void
   def test_finds_literal_define_method_blocks_and_their_nested_definitions: () -> void
+end
+
+class BatchTest < Minitest::Test
+  @root: String
+  @first: String
+  @second: String
+  def setup: () -> void
+  def teardown: () -> void
+  def test_serial_batch_preserves_order_and_coverage: () -> void
+  def test_complexity_only_batch_leaves_scores_unknown: () -> void
+  def test_empty_batch_returns_no_entries: () -> void
+  def test_rejects_nonpositive_worker_counts: () -> void
+  def test_batch_preserves_parse_and_filesystem_errors: () -> void
+end
+
+class BatchProcessTest < Minitest::Test
+  @root: String
+  def setup: () -> void
+  def teardown: () -> void
+  def run_program: (String program) { (String output, String error, Process::Status status) -> void } -> void
+  def pid_tracer: () -> String
+  def test_explicit_workers_preserve_order_and_run_in_children: () -> void
+  def test_automatic_workers_are_bounded_and_small_batches_stay_serial: () -> void
+  def test_multithreaded_hosts_stay_serial: () -> void
+  def test_hosts_without_fork_stay_serial: () -> void
+  def test_unimplemented_fork_stays_serial: () -> void
+  def test_analysis_errors_keep_serial_order_and_reap_children: () -> void
+  def test_parallel_coverage_matches_exact_serial_scores: () -> void
+  def test_parallel_filesystem_errors_keep_their_class: () -> void
+  def test_abnormal_worker_exit_returns_a_controlled_error: () -> void
+  def test_large_payloads_match_serial_entries_without_blocking: () -> void
+  def test_invalid_and_missing_payloads_return_controlled_errors: () -> void
+  def test_partial_start_failure_reaps_children_before_serial_fallback: () -> void
+  def test_interrupt_cancels_and_reaps_running_workers: () -> void
+  def test_child_close_failure_does_not_run_inherited_exit_hooks: () -> void
+  def test_cli_workers_preserve_reports_snapshots_and_threshold_statuses: () -> void
+  def test_cli_worker_failures_preserve_the_previous_snapshot: () -> void
+  def test_external_child_reaper_does_not_break_results_or_receive_signals: () -> void
+  def test_interrupt_after_wait_does_not_signal_a_reaped_pid: () -> void
 end
 
 class CLITest < Minitest::Test
@@ -49,6 +90,7 @@ class CLITest < Minitest::Test
   def test_combines_source_roots_paths_and_fragment_filters_without_duplicates: () -> void
   def test_errors_preserve_previous_snapshot: () -> void
   def test_help_version_invalid_options_and_empty_selection: () -> void
+  def test_worker_option_preserves_reports_and_rejects_invalid_counts: () -> void
   def test_coverage_command_must_succeed_and_refresh_its_report: () -> void
   def test_changed_files_include_staged_unstaged_untracked_and_renamed_paths: () -> void
   def test_changed_outside_a_repository_fails_without_replacing_snapshot: () -> void

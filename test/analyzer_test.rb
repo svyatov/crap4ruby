@@ -17,6 +17,22 @@ class AnalyzerTest < Minitest::Test
       [method.name, method.namespace, method.complexity, method.lines, method.path]
   end
 
+  def test_can_skip_coverage_lines_while_preserving_methods_and_complexity
+    methods = Crap4Ruby::Analyzer.new(coverage: false).call(<<~RUBY, path: "sample.rb")
+      def outer
+        def inner(flag)
+          flag ? 1 : 0
+        end
+      end
+      define_method(:dynamic) do |flag|
+        flag ? 1 : 0
+      end
+    RUBY
+
+    assert_equal([["outer", 2, nil], ["inner", 2, nil], ["dynamic", 2, nil]],
+      methods.map { |method| [method.name, method.complexity, method.lines] })
+  end
+
   def test_resolves_namespaces_and_singleton_methods
     methods = analyze(<<~RUBY)
       module Shop
@@ -166,6 +182,31 @@ class AnalyzerTest < Minitest::Test
     method = analyze("def update(object)\n object&.value ||= 1\nend").first
 
     assert_equal 3, method.complexity
+  end
+
+  def test_counts_boolean_assignments_for_each_ruby_target
+    method = analyze(<<~RUBY).first
+      define_method(:update) do
+        local &&= true
+        local ||= false
+        @instance &&= true
+        @instance ||= false
+        @@class_variable &&= true
+        @@class_variable ||= false
+        $global &&= true
+        $global ||= false
+        Constant &&= true
+        Constant ||= false
+        Owner::Constant &&= true
+        Owner::Constant ||= false
+        object.value &&= true
+        object.value ||= false
+        object[0] &&= true
+        object[0] ||= false
+      end
+    RUBY
+
+    assert_equal 17, method.complexity
   end
 
   def test_discounts_repeated_safe_navigation_until_local_assignment

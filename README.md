@@ -97,6 +97,7 @@ crap4ruby does not configure SimpleCov, delete reports, install dependencies, or
 | `--coverage-command COMMAND` | Run a shell command that refreshes the selected report. |
 | `--no-coverage` | Report complexity with unknown coverage and CRAP. |
 | `--no-save` | Print results without creating or replacing `.metrics/crap.edn`. |
+| `--jobs N` | Set a positive worker count; `1` forces serial analysis. The default selects workers automatically. |
 | `--threshold NUMBER` | Check this finite, nonnegative limit; exit 2 for a measured violation, or 1 if an unknown score could exceed it. |
 | `-h`, `--help` | Print usage. |
 | `-v`, `--version` | Print the gem version. |
@@ -125,6 +126,8 @@ bundle exec crap4ruby --no-coverage --no-save
 
 `--no-save` preserves the terminal report and threshold exit codes while leaving the snapshot unchanged.
 It also works with coverage enabled.
+
+Selections of at least 64 files automatically use up to four worker processes, limited by the available processors. Workers reduce analysis latency by using more CPU and memory. Use `--jobs 1` to keep analysis in one process, or set a larger count explicitly. The count never exceeds the selected file count. Platforms without fork support and hosts with other live Ruby threads use serial analysis. Worker startup resource failures also fall back to serial analysis. Reports, scores, and snapshot behavior are the same in both modes.
 
 ## Complexity and coverage
 
