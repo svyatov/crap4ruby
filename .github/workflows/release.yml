@@ -81,7 +81,7 @@ jobs:
           bundler-cache: false
       - name: Install signing client
         run: bundle install
-      - uses: rubygems/configure-rubygems-credentials@f5a32efa94076b80b28556b2d3b04cb3707b6df1 # main
+      - uses: rubygems/configure-rubygems-credentials@a3462e5c07dc676007e359eddef1949756fd3102 # main
       - name: Sign the built gem
         run: bundle exec sigstore-cli sign pkg/crap4ruby.gem --bundle pkg/crap4ruby.gem.sigstore.json
       - name: Publish with attestation
