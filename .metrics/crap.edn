@@ -15,12 +15,10 @@
   {:name "discover_block", :namespace "Crap4Ruby::Analyzer", :complexity 7, :coverage 100.0, :crap 7.0}
   {:name "fraction", :namespace "Crap4Ruby::Coverage", :complexity 7, :coverage 100.0, :crap 7.0}
   {:name "self.table", :namespace "Crap4Ruby::Report", :complexity 7, :coverage 100.0, :crap 7.0}
-  {:name "parse_options", :namespace "Crap4Ruby::CLI", :complexity 6, :coverage 96.7742, :crap 6.0012}
   {:name "child_decisions", :namespace "Crap4Ruby::Analyzer", :complexity 6, :coverage 100.0, :crap 6.0}
   {:name "iteration?", :namespace "Crap4Ruby::Analyzer", :complexity 6, :coverage 100.0, :crap 6.0}
-  {:name "self.child_result", :namespace "Crap4Ruby::Batch", :complexity 2, :coverage 0.0, :crap 6.0}
   {:name "self.parallel", :namespace "Crap4Ruby::Batch", :complexity 6, :coverage 100.0, :crap 6.0}
-  {:name "self.run_child", :namespace "Crap4Ruby::Batch", :complexity 2, :coverage 0.0, :crap 6.0}
+  {:name "parse_options", :namespace "Crap4Ruby::CLI", :complexity 6, :coverage 100.0, :crap 6.0}
   {:name "self.terminal", :namespace "Crap4Ruby::Report", :complexity 6, :coverage 100.0, :crap 6.0}
   {:name "assignment_target?", :namespace "Crap4Ruby::Analyzer", :complexity 5, :coverage 100.0, :crap 5.0}
   {:name "decision?", :namespace "Crap4Ruby::Analyzer", :complexity 5, :coverage 100.0, :crap 5.0}
@@ -44,9 +42,11 @@
   {:name "self.changed_files", :namespace "Crap4Ruby::Discovery", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "self.edn", :namespace "Crap4Ruby::Report", :complexity 3, :coverage 100.0, :crap 3.0}
   {:name "self.number", :namespace "Crap4Ruby::Report", :complexity 3, :coverage 100.0, :crap 3.0}
-  {:name "self.start_worker", :namespace "Crap4Ruby::Batch", :complexity 2, :coverage 90.9091, :crap 2.003}
   {:name "boundary?", :namespace "Crap4Ruby::Analyzer", :complexity 2, :coverage 100.0, :crap 2.0}
   {:name "call", :namespace "Crap4Ruby::Analyzer", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "self.child_result", :namespace "Crap4Ruby::Batch", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "self.run_child", :namespace "Crap4Ruby::Batch", :complexity 2, :coverage 100.0, :crap 2.0}
+  {:name "self.start_worker", :namespace "Crap4Ruby::Batch", :complexity 2, :coverage 100.0, :crap 2.0}
   {:name "load_coverage", :namespace "Crap4Ruby::CLI", :complexity 2, :coverage 100.0, :crap 2.0}
   {:name "report_stamp", :namespace "Crap4Ruby::CLI", :complexity 2, :coverage 100.0, :crap 2.0}
   {:name "self.load", :namespace "Crap4Ruby::Coverage", :complexity 2, :coverage 100.0, :crap 2.0}

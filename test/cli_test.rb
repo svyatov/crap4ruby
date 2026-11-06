@@ -47,7 +47,7 @@ class CLITest < Minitest::Test
       "lib/sample.rb" => {"lines" => [1, 1, 1, 0, nil, nil]}
     }}))
 
-    assert_equal 0, run_cli("--coverage", "results.json", "--threshold", "2.5")
+    assert_equal 0, run_cli("--coverage", "results.json", "--use-existing-coverage", "--threshold", "2.5")
     assert_equal "No methods exceed CRAP 2.5.\n", @out.string
     assert_includes snapshot, ":coverage 50.0, :crap 2.5"
     assert_equal 2, run_cli("--coverage", "results.json", "--threshold", "2.49")

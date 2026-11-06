@@ -45,6 +45,7 @@ class BatchProcessTest < Minitest::Test
   def run_program: (String program) { (String output, String error, Process::Status status) -> void } -> void
   def pid_tracer: () -> String
   def test_explicit_workers_preserve_order_and_run_in_children: () -> void
+  def test_worker_coverage_is_saved_before_immediate_exit: () -> void
   def test_automatic_workers_are_bounded_and_small_batches_stay_serial: () -> void
   def test_multithreaded_hosts_stay_serial: () -> void
   def test_hosts_without_fork_stay_serial: () -> void
@@ -125,6 +126,7 @@ class IntegrationTest < Minitest::Test
   def test_excludes_nested_method_heredocs_from_outer_coverage: () -> void
   def test_accepts_a_threshold_equal_to_the_exact_score: () -> void
   def test_executable_returns_usage_errors_to_the_shell: () -> void
+  def test_executable_reports_its_version_without_bundler: () -> void
   def test_reports_unknown_coverage_when_a_body_shares_its_definition_line: () -> void
   def test_measures_implicit_rescue_bodies_without_the_definition_line: () -> void
   def test_measures_define_method_bodies_with_numbered_parameters: () -> void
