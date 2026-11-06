@@ -195,7 +195,11 @@ class CLITest < Minitest::Test
   def test_rejects_negative_thresholds_that_underflow_float_precision
     write(".metrics/crap.edn", "previous snapshot")
 
-    assert_equal 1, run_cli("--threshold", "-1e-1000")
+    _, warnings = capture_io do
+      assert_equal 1, run_cli("--threshold", "-1e-1000")
+    end
+
+    assert_empty(warnings.lines.reject { |line| line.include?("warning: Float -1e-1000 out of range") })
     assert_includes @err.string, "threshold must be finite and nonnegative"
     assert_equal "previous snapshot", snapshot
   end
