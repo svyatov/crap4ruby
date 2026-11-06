@@ -2,6 +2,7 @@
 
 require_relative "test_helper"
 require "open3"
+require "bundler"
 
 class IntegrationTest < Minitest::Test
   def with_coverage(source, invocation)
@@ -66,7 +67,7 @@ class IntegrationTest < Minitest::Test
     with_coverage(source, "outer(true)") do |root|
       executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
       library = File.expand_path("../lib", File.dirname(__FILE__))
-      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, chdir: root)
+      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--verbose", chdir: root)
 
       assert_equal 0, status.exitstatus, "#{output}\n#{error}"
       assert_match(/outer\s+Object\s+3\s+100.0%\s+3.0/, output)
@@ -81,6 +82,29 @@ class IntegrationTest < Minitest::Test
     assert_equal 1, status.exitstatus
     assert_empty output
     assert_includes error, "invalid option"
+  end
+
+  def test_executable_reports_its_version_without_bundler
+    program = <<~RUBY
+      abort "Bundler must be inactive" if defined?(Bundler)
+      require "simplecov"
+      SimpleCov.start do
+        root Dir.pwd
+        command_name "standalone CLI"
+        cover "lib/**/*.rb"
+      end
+      SimpleCov.formatters = []
+      load "exe/crap4ruby"
+    RUBY
+    # @type var result: [String, String, Process::Status]
+    result = Bundler.with_unbundled_env do
+      Open3.capture3(RbConfig.ruby, "-Ilib", "-e", program, "--", "--version")
+    end
+    output, error, status = result
+
+    assert status.success?, "#{output}\n#{error}"
+    assert_equal "#{Crap4Ruby::VERSION}\n", output
+    assert_empty error
   end
 
   def test_reports_unknown_coverage_when_a_body_shares_its_definition_line
@@ -115,7 +139,7 @@ class IntegrationTest < Minitest::Test
     with_coverage(source, "") do |root|
       executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
       library = File.expand_path("../lib", File.dirname(__FILE__))
-      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, chdir: root)
+      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--verbose", chdir: root)
 
       assert_equal 0, status.exitstatus, "#{output}\n#{error}"
       assert_match(/rescued\s+Object\s+3\s+0.0%\s+12.0/, output)
@@ -136,7 +160,7 @@ class IntegrationTest < Minitest::Test
     with_coverage(source, "Sample.new.called(true)") do |root|
       executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
       library = File.expand_path("../lib", File.dirname(__FILE__))
-      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, chdir: root)
+      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--verbose", chdir: root)
 
       assert_equal 0, status.exitstatus, "#{output}\n#{error}"
       assert_match(/called\s+Sample\s+2\s+100.0%\s+2.0/, output)
@@ -215,7 +239,7 @@ class IntegrationTest < Minitest::Test
 
       executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
       library = File.expand_path("../lib", File.dirname(__FILE__))
-      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, chdir: root)
+      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--verbose", chdir: root)
 
       assert status.success?, "#{output}\n#{error}"
       assert_match(/uncalled\s+Sample\s+1\s+0.0%\s+2.0/, output)

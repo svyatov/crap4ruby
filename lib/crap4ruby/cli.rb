@@ -38,7 +38,8 @@ module Crap4Ruby
         path = Report.write(entries, root: root)
         @stderr.puts("Wrote #{path}")
       end
-      @stdout.write(Report.table(entries))
+      @stdout.write(Report.terminal(entries,
+        threshold: options.fetch(:threshold, 30), verbose: options[:verbose] == true))
       threshold_status(entries, options[:threshold])
     rescue Error, OptionParser::ParseError, SystemCallError => error
       @stderr.puts("crap4ruby: #{error.message}")
@@ -57,6 +58,7 @@ module Crap4Ruby
       options = {root: Dir.pwd, source_roots: [], changed: false, coverage: "coverage/.resultset.json"}
       parser = OptionParser.new do |cli|
         cli.banner = "Usage: crap4ruby [options] [file-or-directory-or-filter ...]"
+        cli.separator "Default output: CRAP > 30 and unknown scores; --threshold sets the display limit."
         cli.on("--root PATH", "Project root (default: current directory)") do |path|
           # @type var path: String
           options[:root] = path
@@ -72,6 +74,7 @@ module Crap4Ruby
         end
         cli.on("--no-coverage", "Complexity only; coverage and CRAP are N/A") { options[:no_coverage] = true }
         cli.on("--no-save", "Print results without writing .metrics/crap.edn") { options[:no_save] = true }
+        cli.on("--verbose", "Show all analyzed methods") { options[:verbose] = true }
         cli.on("--jobs N", Integer, "Worker processes (default: automatic; 1 disables workers)") do |jobs|
           # @type var jobs: Integer
           raise OptionParser::InvalidArgument, "jobs must be positive" if jobs < 1

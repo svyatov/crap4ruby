@@ -22,8 +22,17 @@ class BatchProcessTest < Minitest::Test
         root Dir.pwd
         command_name "batch process #{Process.pid}"
         cover "lib/**/*.rb"
+        merge_subprocesses true
       end
       SimpleCov.formatters = []
+      # Workers use exit! to skip inherited hooks, so save only coverage before terminating.
+      Process.singleton_class.prepend(Module.new do
+        def exit!(status = false)
+          SimpleCov.result
+        ensure
+          super
+        end
+      end)
       require "crap4ruby"
       root = ARGV.fetch(0)
       files = %w[second.rb first.rb].map { |name| File.join(root, name) }
@@ -65,6 +74,21 @@ class BatchProcessTest < Minitest::Test
       assert_equal %w[second first], result.fetch(:names)
       assert_equal 2, result.fetch(:pids).uniq.size
       refute_includes result.fetch(:pids), result.fetch(:parent)
+    end
+  end
+
+  def test_worker_coverage_is_saved_before_immediate_exit
+    skip "fork is unavailable" unless Process.respond_to?(:fork)
+
+    run_program(<<~RUBY) do |output, error, status|
+      SimpleCov.coverage_path File.join(root, "coverage")
+      Crap4Ruby::Batch.call(files, nil, jobs: 2)
+    RUBY
+      assert status.success?, "#{output}\n#{error}"
+      # @type var resultset: Hash[String, Object]
+      resultset = JSON.parse(File.read(File.join(@root, "coverage/.resultset.json")))
+
+      assert_equal(2, resultset.keys.count { |name| name.include?("(subprocess:") })
     end
   end
 

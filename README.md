@@ -30,11 +30,18 @@ In an existing project, select the source you want to measure:
 crap4ruby --no-coverage
 crap4ruby
 crap4ruby --threshold 30
+crap4ruby --verbose
 crap4ruby app/models/user.rb
 crap4ruby app/models lib/billing
 ```
 
 The first command reports complexity alone. The other commands require `coverage/.resultset.json` from your project's test run.
+
+Default output shows methods with CRAP scores strictly above 30, plus methods with unknown scores.
+An explicit `--threshold NUMBER` sets both the display limit and the enforced limit.
+The default display limit does not enforce a threshold or change the exit status.
+Use `--verbose` to show every analyzed method. Snapshots always contain every analyzed method.
+With `--no-coverage`, every CRAP score is unknown, so every method remains visible.
 
 To use Bundler, add `gem "crap4ruby", require: false` to your project's `Gemfile` and run `bundle install`.
 Run the tool with `bundle exec crap4ruby`.
@@ -97,8 +104,9 @@ crap4ruby does not configure SimpleCov, delete reports, install dependencies, or
 | `--coverage-command COMMAND` | Run a shell command that refreshes the selected report. |
 | `--no-coverage` | Report complexity with unknown coverage and CRAP. |
 | `--no-save` | Print results without creating or replacing `.metrics/crap.edn`. |
+| `--verbose` | Show every analyzed method, including scores at or below the display limit. |
 | `--jobs N` | Set a positive worker count; `1` forces serial analysis. The default selects workers automatically. |
-| `--threshold NUMBER` | Check this finite, nonnegative limit; exit 2 for a measured violation, or 1 if an unknown score could exceed it. |
+| `--threshold NUMBER` | Set the display limit and check this finite, nonnegative limit; exit 2 for a measured violation, or 1 if an unknown score could exceed it. |
 | `-h`, `--help` | Print usage. |
 | `-v`, `--version` | Print the gem version. |
 
@@ -171,7 +179,7 @@ Reports are accepted as supplied; generate fresh coverage after changing source 
 ## Snapshot
 
 The table lists the highest scores first, followed by entries with unknown scores.
-The atomically replaced `.metrics/crap.edn` contains the same sorted entries, with coverage expressed as a percentage:
+The atomically replaced `.metrics/crap.edn` contains every analyzed method in the same order, with coverage expressed as a percentage:
 
 ```clojure
 {:entries [
@@ -184,7 +192,8 @@ Instance method names are `charge`; singleton method names are `self.charge`.
 `--no-coverage` writes `nil` for both `:coverage` and `:crap`.
 
 The shape matches crapper's snapshot. This gem does not add Ruby support to crapper or its consumers.
-A filtered run writes only its selected methods. Reopened classes and repeated definitions can produce repeated namespace/name pairs.
+A run restricted by source paths or `--changed` writes only its selected methods. Display filtering leaves the snapshot complete.
+Reopened classes and repeated definitions can produce repeated namespace/name pairs.
 
 ## Limits
 

@@ -99,6 +99,7 @@ module Crap4Ruby
 
   module Report
     def self.sorted: (Array[Entry] entries) -> Array[Entry]
+    def self.terminal: (Array[Entry] entries, ?threshold: Integer | score, ?verbose: bool) -> String
     def self.table: (Array[Entry] entries) -> String
     def self.label: (String value) -> String
     def self.edn: (Array[Entry] entries) -> String
@@ -114,7 +115,7 @@ module Crap4Ruby
   class CLI
     type options = { root: String, source_roots: Array[String], changed: bool, coverage: String,
       ?help: bool, ?version: bool, ?no_coverage: bool, ?no_save: bool, ?existing: bool, ?command: String,
-      ?threshold: Rational, ?jobs: Integer }
+      ?threshold: Rational, ?jobs: Integer, ?verbose: bool }
     @stdout: _Output
     @stderr: _Output
     def initialize: (?stdout: _Output, ?stderr: _Output) -> void
