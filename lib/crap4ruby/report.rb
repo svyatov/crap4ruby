@@ -15,6 +15,23 @@ module Crap4Ruby
       entries.sort_by { |entry| [entry.crap ? 0 : 1, -(entry.crap || 0), entry.namespace, entry.name, entry.path] }
     end
 
+    # Formats methods above the display limit and methods with unknown scores.
+    # Verbose output includes every entry, preserving the complete table format.
+    #
+    # @param entries [Array<Entry>] results in display order
+    # @param threshold [Integer, Float, Rational] exclusive display limit
+    # @param verbose [Boolean] whether to show all entries
+    # @return [String] terminal table or empty-result message, ending with a newline
+    def self.terminal(entries, threshold: 30, verbose: false)
+      return table(entries) if verbose
+      return "No methods found.\n" if entries.empty?
+
+      visible = entries.select { |entry| !entry.crap || entry.crap > threshold }
+      return "No methods exceed CRAP #{threshold.to_f.to_s.delete_suffix(".0")}.\n" if visible.empty?
+
+      table(visible)
+    end
+
     # Formats a terminal table, preserving entry order and displaying unknown values as N/A.
     #
     # @param entries [Array<Entry>] results in display order

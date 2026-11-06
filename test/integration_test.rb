@@ -66,7 +66,7 @@ class IntegrationTest < Minitest::Test
     with_coverage(source, "outer(true)") do |root|
       executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
       library = File.expand_path("../lib", File.dirname(__FILE__))
-      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, chdir: root)
+      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--verbose", chdir: root)
 
       assert_equal 0, status.exitstatus, "#{output}\n#{error}"
       assert_match(/outer\s+Object\s+3\s+100.0%\s+3.0/, output)
@@ -115,7 +115,7 @@ class IntegrationTest < Minitest::Test
     with_coverage(source, "") do |root|
       executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
       library = File.expand_path("../lib", File.dirname(__FILE__))
-      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, chdir: root)
+      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--verbose", chdir: root)
 
       assert_equal 0, status.exitstatus, "#{output}\n#{error}"
       assert_match(/rescued\s+Object\s+3\s+0.0%\s+12.0/, output)
@@ -136,7 +136,7 @@ class IntegrationTest < Minitest::Test
     with_coverage(source, "Sample.new.called(true)") do |root|
       executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
       library = File.expand_path("../lib", File.dirname(__FILE__))
-      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, chdir: root)
+      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--verbose", chdir: root)
 
       assert_equal 0, status.exitstatus, "#{output}\n#{error}"
       assert_match(/called\s+Sample\s+2\s+100.0%\s+2.0/, output)
@@ -215,7 +215,7 @@ class IntegrationTest < Minitest::Test
 
       executable = File.expand_path("../exe/crap4ruby", File.dirname(__FILE__))
       library = File.expand_path("../lib", File.dirname(__FILE__))
-      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, chdir: root)
+      output, error, status = Open3.capture3(RbConfig.ruby, "-I", library, executable, "--verbose", chdir: root)
 
       assert status.success?, "#{output}\n#{error}"
       assert_match(/uncalled\s+Sample\s+1\s+0.0%\s+2.0/, output)

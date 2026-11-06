@@ -5,6 +5,14 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+### Added
+
+- Add `--verbose` to show the complete method table. The `-v` option continues to print the version.
+
+### Changed
+
+- Limit normal terminal output to CRAP scores strictly above 30 and unknown scores. An explicit `--threshold` overrides the display limit and retains its enforcement behavior. Snapshots retain all analyzed methods.
+
 ## [0.2.2] - 2026-10-29
 
 ### Added

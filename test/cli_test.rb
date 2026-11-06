@@ -48,9 +48,47 @@ class CLITest < Minitest::Test
     }}))
 
     assert_equal 0, run_cli("--coverage", "results.json", "--threshold", "2.5")
+    assert_equal "No methods exceed CRAP 2.5.\n", @out.string
     assert_includes snapshot, ":coverage 50.0, :crap 2.5"
     assert_equal 2, run_cli("--coverage", "results.json", "--threshold", "2.49")
+    assert_match(/pick\s+Sample\s+2\s+50.0%\s+2.5/, @out.string)
     assert_match(/threshold/i, @err.string)
+  end
+
+  def test_filters_terminal_output_without_filtering_the_snapshot_or_enforcing_a_default_threshold
+    write("lib/sample.rb", <<~RUBY)
+      def high(x)
+        x ||= 1
+        x ||= 2
+        x ||= 3
+        x ||= 4
+        x ||= 5
+      end
+      def low(x)
+        x ? 1 : 0
+      end
+      def unknown = 1
+    RUBY
+    write("results.json", JSON.generate("Test" => {"coverage" => {
+      "lib/sample.rb" => [1, 0, 0, 0, 0, 0, nil, 1, 0, nil, 1]
+    }}))
+
+    assert_equal 0, run_cli("--coverage", "results.json")
+    assert_match(/high\s+Object\s+6\s+0.0%\s+42.0/, @out.string)
+    assert_includes @out.string, "unknown"
+    refute_includes @out.string, "low"
+    assert_includes snapshot, ':name "low"'
+    full_snapshot = snapshot
+
+    assert_equal 2, run_cli("--coverage", "results.json", "--threshold", "5")
+    assert_includes @out.string, "low"
+    assert_equal full_snapshot, snapshot
+    assert_equal 0, run_cli("--coverage", "results.json", "--verbose")
+    assert_includes @out.string, "low"
+    assert_equal full_snapshot, snapshot
+    assert_equal 2, run_cli("--coverage", "results.json", "--verbose", "--no-save", "--threshold", "30")
+    assert_includes @out.string, "low"
+    assert_equal full_snapshot, snapshot
   end
 
   def test_no_save_reports_complexity_without_creating_metrics_directory
@@ -89,7 +127,7 @@ class CLITest < Minitest::Test
 
   def test_no_save_does_not_create_snapshot_for_empty_selection
     assert_equal 0, run_cli("--no-save")
-    assert_includes @out.string, "CRAP Report"
+    assert_equal "No methods found.\n", @out.string
     refute_path_exists File.join(@root, ".metrics")
   end
 
@@ -208,9 +246,12 @@ class CLITest < Minitest::Test
   def test_help_version_invalid_options_and_empty_selection
     assert_equal 0, run_cli("--help")
     assert_includes @out.string, "--coverage-command"
+    assert_includes @out.string, "--verbose"
     refute_path_exists File.join(@root, ".metrics")
     assert_equal 0, run_cli("--version")
     assert_includes @out.string, Crap4Ruby::VERSION
+    assert_equal 0, run_cli("-v")
+    assert_equal "#{Crap4Ruby::VERSION}\n", @out.string
     [["--unknown"], ["--threshold", "-1"], ["--threshold", "NaN"],
       ["--no-coverage", "--coverage-command", "true"], ["--source-root", "missing"]].each do |arguments|
       assert_equal 1, run_cli(*arguments), arguments.inspect

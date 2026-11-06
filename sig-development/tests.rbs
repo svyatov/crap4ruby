@@ -76,6 +76,7 @@ class CLITest < Minitest::Test
   def git: (*String arguments) -> void
   def test_writes_complexity_only_table_and_snapshot: () -> void
   def test_reads_coverage_and_compares_unrounded_scores: () -> void
+  def test_filters_terminal_output_without_filtering_the_snapshot_or_enforcing_a_default_threshold: () -> void
   def test_no_save_reports_complexity_without_creating_metrics_directory: () -> void
   def test_no_save_preserves_snapshot_when_threshold_is_uncertain: () -> void
   def test_no_save_reports_coverage_and_measured_threshold_violations: () -> void
@@ -109,9 +110,13 @@ class CoverageSetupTest < Minitest::Test
 end
 
 class ReportTest < Minitest::Test
-  def entry: (String name, Float? score, ?String path) -> Crap4Ruby::Entry
+  def entry: (String name, Crap4Ruby::score? score, ?String path) -> Crap4Ruby::Entry
   def test_orders_scores_before_unknowns_and_breaks_ties_deterministically: () -> void
   def test_writes_the_exact_edn_shape_with_escaped_strings_and_precise_scores: () -> void
+  def test_terminal_shows_only_scores_above_30_and_unknowns_in_entry_order: () -> void
+  def test_terminal_compares_exact_scores_against_an_explicit_limit: () -> void
+  def test_terminal_distinguishes_empty_analysis_from_filtered_results: () -> void
+  def test_verbose_terminal_preserves_the_complete_table: () -> void
 end
 
 class IntegrationTest < Minitest::Test
