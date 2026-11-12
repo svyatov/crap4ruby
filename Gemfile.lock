@@ -113,7 +113,7 @@ DEPENDENCIES
   bundler-audit (~> 0.9.3)
   crap4ruby!
   lefthook (~> 2.2)
-  minitest (~> 6.0)
+  minitest (~> 6.1)
   rake (~> 13.0)
   rubocop (~> 1.92)
   rubocop-minitest (~> 0.41)
