@@ -35,7 +35,7 @@ module Crap4Ruby
     # @example Analyze a method without loading it
     #   Analyzer.new.call("def eligible?(age) = age >= 18", path: "person.rb")
     def call(source, path:)
-      result = Prism.parse(source)
+      result = Prism.parse(source, version: "latest")
       unless result.success?
         error = result.errors.first
         raise Error, "#{path}:#{error.location.start_line}: #{error.message}"
