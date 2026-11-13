@@ -11,6 +11,8 @@ crap4ruby identifies complex, under-tested Ruby methods using the Change Risk An
 
 Ruby 3.3 or newer is required.
 
+Source parsing uses the newest Ruby syntax supported by the installed Prism version, independently of the Ruby version running crap4ruby.
+
 ```sh
 gem install crap4ruby
 ```
@@ -214,7 +216,8 @@ bundle exec rake
 bundle exec ruby -Ilib exe/crap4ruby --help
 ```
 
-The default task runs the tests with SimpleCov, then fails if any library method's CRAP score exceeds 10.
+The default task runs RuboCop, Steep, tests with SimpleCov, the CRAP limit, YARD validation, and dependency audits.
+It requires 100% typed calls and fails if any library method's CRAP score exceeds 10.
 `bundle exec rake crap` runs the same check. `bundle exec rake test` runs only the tests and coverage collection.
 Each Rake test run discards the previous resultset so stale coverage cannot improve the score.
 Reports are written to `coverage/index.html`, `coverage/.resultset.json`, and `.metrics/crap.edn`.

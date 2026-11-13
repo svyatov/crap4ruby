@@ -5,6 +5,10 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserve parsing of the newest supported Ruby syntax with Prism 2.x, independently of the Ruby version running crap4ruby.
+
 ## [0.2.3] - 2026-11-06
 
 ### Added
