@@ -2,5 +2,5 @@
 
 module Crap4Ruby
   # Gem version used by the CLI and release process.
-  VERSION = "0.2.3"
+  VERSION = "0.2.4"
 end
