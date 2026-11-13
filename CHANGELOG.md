@@ -5,6 +5,8 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-11-13
+
 ### Fixed
 
 - Preserve parsing of the newest supported Ruby syntax with Prism 2.x, independently of the Ruby version running crap4ruby.
@@ -72,7 +74,8 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 - Split CLI execution, AST discovery, and coverage loading into smaller methods without changing their behavior or scoring rules.
 
-[Unreleased]: https://github.com/svyatov/crap4ruby/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/svyatov/crap4ruby/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/svyatov/crap4ruby/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/svyatov/crap4ruby/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/svyatov/crap4ruby/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/svyatov/crap4ruby/compare/v0.2.0...v0.2.1

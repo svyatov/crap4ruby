@@ -55,7 +55,7 @@ Run these commands from this checkout with Ruby 3.3 or newer:
 ```sh
 bundle install
 gem build crap4ruby.gemspec
-gem install ./crap4ruby-0.2.3.gem
+gem install ./crap4ruby-0.2.4.gem
 ```
 
 To use Bundler in the measured project, add this checkout to that project's `Gemfile`:
