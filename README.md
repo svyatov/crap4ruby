@@ -142,6 +142,64 @@ It also works with coverage enabled.
 
 Selections of at least 64 files automatically use up to four worker processes, limited by the available processors. Workers reduce analysis latency by using more CPU and memory. Use `--jobs 1` to keep analysis in one process, or set a larger count explicitly. The count never exceeds the selected file count. Platforms without fork support and hosts with other live Ruby threads use serial analysis. Worker startup resource failures also fall back to serial analysis. Reports, scores, and snapshot behavior are the same in both modes.
 
+## Compare revisions
+
+Use `--json-report` to record a baseline and `--compare` to review changes in method risk.
+These options are listed under [Unreleased in the changelog](CHANGELOG.md#unreleased).
+Set `REPORT_DIR` to an absolute path to a directory shared by both checkouts.
+
+1. Check out the base commit and run its tests with fresh SimpleCov coverage. Export the report from that checkout.
+
+   ```sh
+   crap4ruby --json-report --revision "$BASE_SHA" --no-save > "$REPORT_DIR/base.json"
+   ```
+
+2. Check out the head commit and run its tests with fresh SimpleCov coverage. Export it with the same crap4ruby and Prism versions.
+
+   ```sh
+   crap4ruby --json-report --revision "$HEAD_SHA" --no-save > "$REPORT_DIR/head.json"
+   ```
+
+3. Compare the reports from any directory.
+
+   ```sh
+   crap4ruby --compare --base-report "$REPORT_DIR/base.json" --head-report "$REPORT_DIR/head.json"
+   ```
+
+Supply a full Git object ID for each `--revision`. Verify it against the checkout before exporting.
+Use the default scan or pass the same `--source-root` options to both exports. Each source root must be within the project root.
+Use the default scan or a common parent when a source directory exists in only one revision.
+JSON export requires valid SimpleCov data when the scan selects source files.
+`--coverage` and `--coverage-command` work with JSON export. Positional selectors, `--changed`, and `--no-coverage` are invalid in this mode.
+
+The [JSON report schema](schemas/report-v1.json) records revisions, tool versions, source roots, and the coverage path.
+It also records every analyzed method, including unavailable scores. CRAP scores are stored as exact rational strings.
+`--verbose` leaves the export unchanged. An explicit `--threshold` still enforces the absolute limit and can fail with complete JSON on stdout.
+`--no-save` skips the EDN snapshot. Diagnostics go to stderr.
+
+Comparison reads the two saved reports and prints Markdown. The reports must use the same schema, tool versions, and scan scope.
+The report shows method moves, unavailable measurements, ambiguous matches, and existing high scores.
+You can reuse a report for the exact base commit with matching settings.
+
+To enforce the comparison, add `--fail-on-regression`. The default `--limit` is 30 and the default `--min-increase` is 1.
+A new measured score above the limit fails. An existing measured score fails if it exceeds the limit and increases by more than the minimum.
+New or newly unmeasurable methods make the gate uncertain when their upper bound, `CC^2 + CC`, exceeds the limit.
+A changed ambiguous group makes the gate uncertain when a current score or upper bound exceeds the limit.
+A missing baseline measurement appears in the report without failing the gate on its own.
+
+| Exit | Result |
+| --- | --- |
+| 0 | Comparison succeeded, and the gate passed if requested. |
+| 1 | Input is invalid or incompatible, or the requested gate is uncertain. |
+| 2 | The requested gate found a measured violation, which takes precedence over uncertainty. |
+
+### Run on GitHub Actions
+
+Copy the [example workflow](examples/crap4ruby-pr.yml) to `.github/workflows/crap4ruby-pr.yml`.
+Set the repository Actions variables `CRAP4RUBY_VERSION` and `CRAP4RUBY_PRISM_VERSION` to exact, compatible gem versions that support these options.
+Adapt the Ruby version and test command to your project. Keep the scan scope identical across revisions.
+The workflow tests the exact pull request base and head commits in separate jobs. The comparison job publishes the Markdown summary and retains the gate exit status.
+
 ## Complexity and coverage
 
 The scoring engine uses this formula, with coverage expressed as a fraction between 0 and 1:

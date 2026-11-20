@@ -8,6 +8,7 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 ### Added
 
 - Show method declaration locations, scan counts, the coverage source, and reasons for exceptional coverage results in the terminal report.
+- Export versioned JSON reports for exact revisions and compare them in Markdown. An optional regression gate fails on material CRAP increases, new high scores, or uncertainty.
 
 ### Changed
 

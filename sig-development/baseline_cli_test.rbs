@@ -1,0 +1,16 @@
+class BaselineCLITest < Minitest::Test
+  REVISION: String
+  @root: String
+  @out: StringIO
+  @err: StringIO
+  def setup: () -> void
+  def teardown: () -> void
+  def write: (String relative, String content) -> String
+  def cli: (*String args) -> Integer
+  def export: (*String args) -> Integer
+  def test_exports_complete_exact_scores_and_distinguishes_method_kind: () -> void
+  def test_export_keeps_absolute_threshold_enforcement_and_empty_scope: () -> void
+  def test_rejects_incompatible_command_modes: () -> void
+  def test_read_only_compare_uses_the_same_verdict_for_reporting_and_gating: () -> void
+  def test_uncertainty_and_invalid_report_have_distinct_output: () -> void
+end

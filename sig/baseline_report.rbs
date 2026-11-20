@@ -1,0 +1,67 @@
+module Crap4Ruby
+  class BaselineEntry < Data
+    attr_reader path: String
+    attr_reader line: Integer
+    attr_reader namespace: String
+    attr_reader kind: String
+    attr_reader name: String
+    attr_reader complexity: Integer
+    attr_reader coverage: Float?
+    attr_reader crap: Rational?
+    attr_reader coverage_note: String?
+    def self.new: (String path, Integer line, String namespace, String kind, String name, Integer complexity,
+      Float? coverage, Rational? crap, String? coverage_note) -> instance
+    def with: (?path: String, ?line: Integer, ?namespace: String, ?kind: String, ?name: String, ?complexity: Integer,
+      ?coverage: Float?, ?crap: Rational?, ?coverage_note: String?) -> instance
+  end
+
+  class BaselineReport
+    SCHEMA_VERSION: Integer
+    REPORT_FIELDS: Array[String]
+    ENTRY_FIELDS: Array[String]
+    REVISION: Regexp
+    SCORE: Regexp
+
+    class UniqueObject < Hash[String, json]
+      def []=: (String key, json value) -> json
+    end
+
+    attr_reader revision: String
+    attr_reader tool_version: String
+    attr_reader prism_version: String
+    attr_reader source_roots: Array[String]
+    attr_reader coverage_path: String?
+    attr_reader entries: Array[BaselineEntry]
+
+    def initialize: (String revision, String tool_version, String prism_version, Array[String] source_roots,
+      String? coverage_path, Array[BaselineEntry] entries) -> void
+    def self.scope: (String root, Array[String] roots) -> Array[String]
+    def self.validate_files!: (String root, Array[String] files) -> void
+    def self.dump: (Array[Entry] entries, root: String, source_roots: Array[String], coverage_path: String?,
+      revision: String) -> String
+    def self.load: (String path) -> BaselineReport
+    def self.check_compatible!: (BaselineReport base, BaselineReport head) -> void
+
+    private
+
+    def self.check_field: (String field, String | Array[String] base, String | Array[String] head) -> void
+    def self.scope_path: (String root, String path) -> String
+    def self.relative_path: (String path, String root, String field) -> String
+    def self.utf8_path: (String path) -> String
+    def self.utf8_text: (String value) -> String
+    def self.dump_entry: (Entry entry, String root) -> Hash[String, json]
+    def self.entry_order: (Hash[String, json] row) -> Array[json]
+    def self.parse_report: (json value) -> BaselineReport
+    def self.object: (json value, Array[String] fields) -> Hash[String, json]
+    def self.text_field: (json value, String field) -> String
+    def self.read_roots: (json value) -> Array[String]
+    def self.canonical_path: (json value, String field) -> String
+    def self.read_coverage_path: (json value, bool empty) -> String?
+    def self.read_entries: (json value, Array[String] roots) -> Array[BaselineEntry]
+    def self.read_entry: (Hash[String, json] record, Array[String] roots) -> BaselineEntry
+    def self.positive_integer: (json value, String field) -> Integer
+    def self.measurement: (Hash[String, json] record, Integer complexity) -> [Rational?, Float?, String?]
+    def self.read_score: (json value, Integer complexity, Integer upper) -> Rational?
+    def self.read_percentage: (json value) -> Float?
+  end
+end

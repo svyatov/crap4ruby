@@ -1,0 +1,76 @@
+module Crap4Ruby
+  module BaselineComparison
+    type kind = :added | :removed | :matched | :ambiguous_changed | :ambiguous_unchanged
+    type identity = [String, String, String]
+    type measurement = [String, Integer, Rational?, Float?, String?]
+
+    class Finding < Data
+      attr_reader kind: kind
+      attr_reader base: Array[BaselineEntry]
+      attr_reader head: Array[BaselineEntry]
+      attr_reader status: Integer
+      def self.new: (kind kind, Array[BaselineEntry] base, Array[BaselineEntry] head, Integer status) -> instance
+    end
+
+    class Result < Data
+      attr_reader base_revision: String
+      attr_reader head_revision: String
+      attr_reader limit: Rational
+      attr_reader min_increase: Rational
+      attr_reader findings: Array[Finding]
+      attr_reader status: Integer
+      def self.new: (String base_revision, String head_revision, Rational limit, Rational min_increase, Array[Finding] findings, Integer status) -> instance
+    end
+
+    def self.call: (BaselineReport base, BaselineReport head, limit: Rational, min_increase: Rational) -> Result
+    def self.markdown: (Result result, enforced: bool) -> String
+    def self.measurements_at_path: (BaselineEntry entry) -> measurement
+    def self.upper_bound: (BaselineEntry entry) -> Integer
+
+    private
+    def self.identity: (BaselineEntry entry) -> identity
+    def self.compare_identity: (Array[BaselineEntry] base, Array[BaselineEntry] head, Rational limit, Rational min_increase) -> Array[Finding]
+    def self.compare_remaining: (Array[BaselineEntry] base, Array[BaselineEntry] head, Rational limit, Rational min_increase) -> Array[Finding]
+    def self.unique_pair?: (Array[BaselineEntry] base, Array[BaselineEntry] head) -> bool
+    def self.matched: (BaselineEntry base, BaselineEntry head, Rational limit, Rational min_increase) -> Finding
+    def self.matched_status: (Rational baseline, BaselineEntry head, Rational? score, Rational limit, Rational min_increase) -> Integer
+    def self.added: (BaselineEntry head, Rational limit) -> Finding
+    def self.ambiguous: (Array[BaselineEntry] base, Array[BaselineEntry] head, Rational limit) -> Finding
+  end
+
+  module BaselineMarkdown
+    type finding = BaselineComparison::Finding
+    def self.render: (BaselineComparison::Result result, enforced: bool) -> String
+
+    private
+    VERDICTS: Array[String]
+    FINDING_LIMIT: Integer
+    LEGACY_LIMIT: Integer
+    GROUP_MEMBER_LIMIT: Integer
+    FIELD_LIMIT: Integer
+    AMBIGUOUS: Array[Symbol]
+    TABLE_HEADER: String
+    def self.summary: (Array[finding] findings) -> String
+    def self.improved?: (finding finding) -> bool
+    def self.unavailable?: (finding finding) -> bool
+    def self.moved?: (finding finding) -> bool
+    def self.visible?: (finding finding) -> bool
+    def self.finding_details: (Array[finding] findings) -> String
+    def self.existing_scores: (Array[finding] findings, Rational limit) -> String
+    def self.table: (Array[finding] findings) -> String
+    def self.table_row: (finding finding) -> String
+    def self.finding_label: (finding finding) -> String
+    def self.matched_label: (finding finding) -> String
+    def self.before_after: (BaselineEntry? base, BaselineEntry? head) { (BaselineEntry entry) -> String } -> String
+    def self.score_change: (BaselineEntry? base, BaselineEntry? head) -> String
+    def self.group_details: (finding finding) -> String
+    def self.group_members: (String side, Array[BaselineEntry] entries) -> String
+    def self.omitted: (Integer count, Integer limit, String noun) -> String
+    def self.method_label: (BaselineEntry entry) -> String
+    def self.location: (BaselineEntry entry) -> String
+    def self.score_text: (Rational? value) -> String
+    def self.exact_number: (Rational value) -> String
+    def self.coverage_text: (BaselineEntry entry) -> String
+    def self.literal: (String value) -> String
+  end
+end

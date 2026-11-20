@@ -1,0 +1,20 @@
+class BaselineReportTest < Minitest::Test
+  REVISION: String
+  def record: () -> Hash[String, Crap4Ruby::json]
+  def document: () -> Hash[String, Crap4Ruby::json]
+  def read_document: (Hash[String, Crap4Ruby::json] document, Array[Crap4Ruby::json] entries) -> Crap4Ruby::BaselineReport
+  def read_text: (String text) -> Crap4Ruby::BaselineReport
+  def test_round_trips_exact_scores_and_preserves_literal_names_and_repeated_definitions: () -> void
+  def test_records_zero_coverage_for_a_file_absent_from_the_resultset: () -> void
+  def test_rejects_inconsistent_measurement_records: () -> void
+  def test_rejects_malformed_entry_fields: () -> void
+  def test_rejects_malformed_report_fields: () -> void
+  def test_rejects_invalid_json_and_wrong_object_shapes: () -> void
+  def test_reports_an_unreadable_input_with_its_path: () -> void
+  def test_allows_an_empty_scan_and_different_coverage_paths_at_the_same_revision: () -> void
+  def test_rejects_incompatible_tool_versions_and_scopes: () -> void
+  def test_normalizes_relative_source_roots: () -> void
+  def test_rejects_missing_absolute_and_escaping_source_roots: () -> void
+  def test_validates_selected_paths_even_when_files_have_no_methods: () -> void
+  def test_export_rejects_paths_that_cannot_be_represented_in_utf8: () -> void
+end
