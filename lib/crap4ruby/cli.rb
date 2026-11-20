@@ -32,14 +32,14 @@ module Crap4Ruby
       raise Error, "#{root}: project root must be a directory" unless File.directory?(root)
 
       files = Discovery.call(root: root, source_roots: options[:source_roots], paths: paths, changed: options[:changed])
-      coverage = load_coverage(options, root) unless options[:no_coverage] || files.empty?
+      coverage, coverage_source = load_coverage(options, root, files.empty?)
       entries = Report.sorted(Batch.call(files, coverage, jobs: options[:jobs]))
       unless options[:no_save]
         path = Report.write(entries, root: root)
         @stderr.puts("Wrote #{path}")
       end
-      @stdout.write(Report.terminal(entries,
-        threshold: options.fetch(:threshold, 30), verbose: options[:verbose] == true))
+      @stdout.write(Report.terminal(entries, root: root, files: files.size, coverage_source: coverage_source,
+        threshold: options.fetch(:threshold, 30), limit: options[:threshold_label], verbose: options[:verbose] == true))
       threshold_status(entries, options[:threshold])
     rescue Error, OptionParser::ParseError, SystemCallError => error
       @stderr.puts("crap4ruby: #{error.message}")
@@ -55,7 +55,10 @@ module Crap4Ruby
     # @raise [OptionParser::ParseError] if an option or threshold is invalid
     def parse_options(arguments)
       # @type var options: options
-      options = {root: Dir.pwd, source_roots: [], changed: false, coverage: "coverage/.resultset.json"}
+      options = {
+        root: Dir.pwd, source_roots: [], changed: false, coverage: "coverage/.resultset.json",
+        threshold_label: "30"
+      }
       parser = OptionParser.new do |cli|
         cli.banner = "Usage: crap4ruby [options] [file-or-directory-or-filter ...]"
         cli.separator "Default output: CRAP > 30 and unknown scores; --threshold sets the display limit."
@@ -97,6 +100,7 @@ module Crap4Ruby
           raise ArgumentError if threshold.negative?
 
           options[:threshold] = threshold
+          options[:threshold_label] = value.strip
         rescue ArgumentError
           raise OptionParser::InvalidArgument, "threshold must be finite and nonnegative"
         end
@@ -138,10 +142,13 @@ module Crap4Ruby
       uncertain.empty? ? 0 : 1
     end
 
-    def load_coverage(options, root)
+    def load_coverage(options, root, empty)
+      return [nil, false] if options[:no_coverage]
+      return [nil, nil] if empty
+
       report = File.expand_path(options[:coverage], root)
       run_coverage(options[:command], root, report) if options[:command]
-      Coverage.load(report, root: root)
+      [Coverage.load(report, root: root), report]
     end
 
     # Runs a shell command at root and forwards its combined output to stderr.

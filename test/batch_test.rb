@@ -23,13 +23,13 @@ class BatchTest < Minitest::Test
     entries = Crap4Ruby::Batch.call([@second, @first], coverage, jobs: 1)
 
     assert_equal [
-      Crap4Ruby::Entry.new("two", "Object", 2, 50.0, Rational(5, 2), @second),
-      Crap4Ruby::Entry.new("one", "Object", 2, 100.0, Rational(2), @first)
+      Crap4Ruby::Entry.new("two", "Object", 2, 50.0, Rational(5, 2), @second, 1, nil),
+      Crap4Ruby::Entry.new("one", "Object", 2, 100.0, Rational(2), @first, 1, nil)
     ], entries
   end
 
   def test_complexity_only_batch_leaves_scores_unknown
-    assert_equal [Crap4Ruby::Entry.new("one", "Object", 2, nil, nil, @first)],
+    assert_equal [Crap4Ruby::Entry.new("one", "Object", 2, nil, nil, @first, 1, nil)],
       Crap4Ruby::Batch.call([@first], nil)
   end
 

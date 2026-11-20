@@ -122,7 +122,7 @@ class IntegrationTest < Minitest::Test
 
       assert_equal 0, status.exitstatus, "#{output}\n#{error}"
       %w[inline endless multiline].each do |name|
-        assert_match(%r{#{name}\s+Object\s+2\s+N/A\s+N/A}, output)
+        assert_match(%r{#{name}\s+Object\s+2\s+N/A \(body shares declaration line\)\s+N/A}, output)
       end
       assert_equal 3, File.read(File.join(root, ".metrics/crap.edn")).scan(":coverage nil, :crap nil").size
     end
@@ -185,7 +185,7 @@ class IntegrationTest < Minitest::Test
 
       assert_equal 1, status.exitstatus, "#{output}\n#{error}"
       %w[ordinary endless block].each do |name|
-        assert_match(%r{#{name}\s+Object\s+2\s+N/A\s+N/A}, output)
+        assert_match(%r{#{name}\s+Object\s+2\s+N/A \(trailing code shares body line\)\s+N/A}, output)
       end
     end
   end

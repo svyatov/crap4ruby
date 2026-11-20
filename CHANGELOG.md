@@ -5,6 +5,14 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 
 ## [Unreleased]
 
+### Added
+
+- Show method declaration locations, scan counts, the coverage source, and reasons for exceptional coverage results in the terminal report.
+
+### Changed
+
+- Sort the terminal report by descending cyclomatic complexity when using `--no-coverage`.
+
 ## [0.2.4] - 2026-11-13
 
 ### Fixed

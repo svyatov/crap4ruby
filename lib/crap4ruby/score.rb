@@ -10,7 +10,7 @@ module Crap4Ruby
     # @return [Entry] result with percentage coverage; coverage and CRAP are nil
     #   when coverage is disabled or the method has no measurable lines
     def self.call(method, coverage)
-      fraction = coverage&.fraction(method)
+      fraction, note = coverage&.measure(method)
       if fraction
         # Combine integer terms before constructing the exact score.
         denominator = fraction.denominator
@@ -19,7 +19,8 @@ module Crap4Ruby
         complexity = method.complexity
         crap = Rational((complexity * complexity * uncovered * uncovered * uncovered) + (complexity * cube), cube)
       end
-      Entry.new(method.name, method.namespace, method.complexity, fraction && (fraction * 100).to_f, crap, method.path)
+      Entry.new(method.name, method.namespace, method.complexity, fraction && (fraction * 100).to_f, crap, method.path,
+        method.line, note)
     end
   end
 end
