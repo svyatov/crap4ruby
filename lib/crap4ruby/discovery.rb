@@ -67,7 +67,7 @@ module Crap4Ruby
         if File.directory?(path)
           Find.prune if path != root && (name.start_with?(".") || EXCLUDED.include?(name) || File.symlink?(path))
         else
-          unless File.symlink?(path) || name.start_with?(".") || name.match?(/\A(?:test|spec)_|_(?:test|spec)\.rb\z/)
+          unless File.symlink?(path) || name.start_with?(".") || name.b.match?(/\A(?:test|spec)_|_(?:test|spec)\.rb\z/)
             paths << path
           end
           # The file type is known; skip Find's repeated lstat.

@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
     "allowed_push_host" => "https://rubygems.org"
   }
   spec.required_ruby_version = ">= 3.3"
-  spec.files = Dir["lib/**/*.rb", "sig/**/*", "exe/*", "*.md", "LICENSE"]
+  spec.files = Dir["lib/**/*.rb", "sig/**/*", "exe/*", "schemas/*.json", "examples/*.yml", "*.md", "LICENSE"]
   spec.require_paths = ["lib"]
   spec.bindir = "exe"
   spec.executables = ["crap4ruby"]

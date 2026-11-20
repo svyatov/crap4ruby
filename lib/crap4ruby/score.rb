@@ -20,7 +20,7 @@ module Crap4Ruby
         crap = Rational((complexity * complexity * uncovered * uncovered * uncovered) + (complexity * cube), cube)
       end
       Entry.new(method.name, method.namespace, method.complexity, fraction && (fraction * 100).to_f, crap, method.path,
-        method.line, note)
+        method.line, note, method.singleton)
     end
   end
 end

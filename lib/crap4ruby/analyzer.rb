@@ -99,7 +99,7 @@ module Crap4Ruby
       end
       name = "self.#{name}" if singleton
       methods << MethodInfo.new(name, scope.empty? ? "Object" : scope.join("::"),
-        1 + decisions(block.body), lines, path, line, note)
+        1 + decisions(block.body), lines, path, line, note, singleton)
       discover(block.parameters, scope, singleton, path, methods)
       discover(block.body, scope, singleton, path, methods)
     rescue EncodingError
@@ -129,14 +129,15 @@ module Crap4Ruby
       owner = method_owner(node, scope)
       return unless owner
 
-      name = "#{"self." if singleton || node.receiver}#{node.name}"
+      is_singleton = singleton || !node.receiver.nil?
+      name = "#{"self." if is_singleton}#{node.name}"
       if @coverage
         header = node.equal_loc || node.rparen_loc || node.parameters&.location || node.name_loc
         lines, note = body_lines(node.body, after: header.end_line, ending: node.location)
       end
       complexity = 1 + decisions(node.body)
       methods << MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), complexity, lines, path,
-        node.location.start_line, note)
+        node.location.start_line, note, is_singleton)
       discover(node.parameters, scope, singleton, path, methods)
       discover(node.body, scope, singleton, path, methods)
     end

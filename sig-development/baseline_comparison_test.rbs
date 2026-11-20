@@ -1,0 +1,21 @@
+class BaselineComparisonTest < Minitest::Test
+  def entry: (?String name, ?path: String, ?line: Integer, ?kind: String, ?complexity: Integer, ?score: Rational?, ?coverage: Float?, ?note: String?, ?namespace: String) -> Crap4Ruby::BaselineEntry
+  def compare: (Array[Crap4Ruby::BaselineEntry] base, Array[Crap4Ruby::BaselineEntry] head, ?limit: Rational, ?min_increase: Rational) -> Crap4Ruby::BaselineComparison::Result
+  def report: (String revision, Array[Crap4Ruby::BaselineEntry] entries) -> Crap4Ruby::BaselineReport
+  def markdown: (Crap4Ruby::BaselineComparison::Result result, ?enforced: bool) -> String
+  def test_line_shifts_do_not_create_additions_and_an_exact_material_increase_fails: () -> void
+  def test_limit_and_increase_are_exclusive: () -> void
+  def test_same_path_matches_first_then_reports_a_unique_move_with_its_score_change: () -> void
+  def test_rename_or_kind_change_counts_as_a_removal_and_an_addition: () -> void
+  def test_lost_and_new_measurements_use_the_head_complexity_to_bound_risk: () -> void
+  def test_a_missing_baseline_is_visible_and_does_not_fail_by_itself: () -> void
+  def test_a_measured_violation_takes_precedence_over_uncertainty_in_both_modes: () -> void
+  def test_reordered_ambiguous_definitions_with_new_lines_are_unchanged: () -> void
+  def test_ambiguous_group_measurements_include_coverage_reason_even_when_scores_are_unchanged: () -> void
+  def test_markdown_explains_when_measured_zero_coverage_changes_reason: () -> void
+  def test_only_the_current_members_of_a_changed_ambiguous_group_set_uncertainty: () -> void
+  def test_ambiguous_group_matching_keeps_multiplicity_and_path_changes: () -> void
+  def test_existing_high_scores_are_bounded_and_include_improvements: () -> void
+  def test_markdown_keeps_untrusted_text_literal_and_on_one_line: () -> void
+  def test_markdown_reports_omitted_actionable_findings_and_group_members: () -> void
+end

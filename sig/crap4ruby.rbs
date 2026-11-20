@@ -16,9 +16,10 @@ module Crap4Ruby
     attr_reader path: String
     attr_reader line: Integer
     attr_reader coverage_note: body_note?
-    def self.new: (String name, String namespace, Integer complexity, Array[Integer]? lines, String path, Integer line, body_note? coverage_note) -> instance
+    attr_reader singleton: bool
+    def self.new: (String name, String namespace, Integer complexity, Array[Integer]? lines, String path, Integer line, body_note? coverage_note, bool singleton) -> instance
     alias self.[] self.new
-    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?lines: Array[Integer]?, ?path: String, ?line: Integer, ?coverage_note: body_note?) -> instance
+    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?lines: Array[Integer]?, ?path: String, ?line: Integer, ?coverage_note: body_note?, ?singleton: bool) -> instance
   end
 
   class Entry < Data
@@ -30,9 +31,10 @@ module Crap4Ruby
     attr_reader path: String
     attr_reader line: Integer
     attr_reader coverage_note: coverage_note?
-    def self.new: (String name, String namespace, Integer complexity, Float? coverage, score? crap, String path, Integer line, coverage_note? coverage_note) -> instance
+    attr_reader singleton: bool
+    def self.new: (String name, String namespace, Integer complexity, Float? coverage, score? crap, String path, Integer line, coverage_note? coverage_note, bool singleton) -> instance
     alias self.[] self.new
-    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?coverage: Float?, ?crap: score?, ?path: String, ?line: Integer, ?coverage_note: coverage_note?) -> instance
+    def with: (?name: String, ?namespace: String, ?complexity: Integer, ?coverage: Float?, ?crap: score?, ?path: String, ?line: Integer, ?coverage_note: coverage_note?, ?singleton: bool) -> instance
   end
 
   class Analyzer
@@ -126,15 +128,25 @@ module Crap4Ruby
   end
 
   class CLI
-    type options = { root: String, source_roots: Array[String], changed: bool, coverage: String, threshold_label: String,
+    type options = { source_roots: Array[String], ?root: String, ?changed: bool, ?coverage: String, ?threshold_label: String,
       ?help: bool, ?version: bool, ?no_coverage: bool, ?no_save: bool, ?existing: bool, ?command: String,
-      ?threshold: Rational, ?jobs: Integer, ?verbose: bool }
+      ?threshold: Rational, ?jobs: Integer, ?verbose: bool, ?json_report: bool, ?revision: String, ?compare: bool,
+      ?base_report: String, ?head_report: String, ?enforce: bool, ?limit: Rational, ?min_increase: Rational }
+    COMPARISON_FLAGS: Array[Symbol]
+    COMPARISON_OPTIONS: Array[Symbol]
     @stdout: _Output
     @stderr: _Output
     def initialize: (?stdout: _Output, ?stderr: _Output) -> void
     def run: (Array[String] arguments) -> Integer
     private
     def parse_options: (Array[String] arguments) -> [options, OptionParser, Array[String]]
+    def analyze: (options options, Array[String] paths) -> Integer
+    def analysis_output: (Array[Entry] entries, String root, Integer files, coverage_source source, Array[String]? scope, options options) -> String
+    def add_comparison_options: (OptionParser cli, options options) -> void
+    def nonnegative_number: (String value, String flag) -> Rational
+    def compare: (options options, Array[String] paths) -> Integer
+    def validate_scan_options: (options options, Array[String] paths) -> void
+    def validate_export: (options options, Array[String] paths) -> void
     def validate_options: (options options) -> void
     def threshold_status: (Array[Entry] entries, Rational? threshold) -> Integer
     def load_coverage: (options options, String root, bool empty) -> [Coverage?, coverage_source]

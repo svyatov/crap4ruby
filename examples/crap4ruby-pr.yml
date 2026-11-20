@@ -1,0 +1,94 @@
+name: CRAP regression
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  CRAP4RUBY_VERSION: ${{ vars.CRAP4RUBY_VERSION }}
+  CRAP4RUBY_PRISM_VERSION: ${{ vars.CRAP4RUBY_PRISM_VERSION }}
+
+jobs:
+  measure:
+    name: Measure ${{ matrix.revision }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        revision: [base, head]
+    env:
+      REVISION: ${{ matrix.revision == 'base' && github.event.pull_request.base.sha || github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.REVISION }}
+          persist-credentials: false
+      - &setup-ruby
+        uses: ruby/setup-ruby@be3c7df29b3349ec6bcfc6b4792f1cf9f5237d18 # v1.343.0
+        with:
+          ruby-version: '3.3'
+      - &install-analyzer
+        name: Install pinned analyzer
+        shell: bash
+        run: |
+          : "${CRAP4RUBY_VERSION:?Set CRAP4RUBY_VERSION to an exact gem version}"
+          : "${CRAP4RUBY_PRISM_VERSION:?Set CRAP4RUBY_PRISM_VERSION to an exact gem version}"
+          cat > "$RUNNER_TEMP/crap4ruby.gemfile" <<'GEMFILE'
+          source "https://rubygems.org"
+          gem "crap4ruby", "= #{ENV.fetch("CRAP4RUBY_VERSION")}"
+          gem "prism", "= #{ENV.fetch("CRAP4RUBY_PRISM_VERSION")}"
+          GEMFILE
+          BUNDLE_GEMFILE="$RUNNER_TEMP/crap4ruby.gemfile" bundle install
+      - name: Run tests with fresh SimpleCov coverage
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$REVISION"
+          bundle install
+          rm -f coverage/.resultset.json
+          bundle exec rake test
+      - name: Export JSON report
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$REVISION"
+          BUNDLE_GEMFILE="$RUNNER_TEMP/crap4ruby.gemfile" bundle exec crap4ruby \
+            --json-report --revision "$REVISION" --no-save > "$RUNNER_TEMP/report.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: crap-${{ matrix.revision }}
+          path: ${{ runner.temp }}/report.json
+          if-no-files-found: error
+
+  compare:
+    name: Compare CRAP reports
+    needs: measure
+    if: ${{ !cancelled() }}
+    permissions: {}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require both reports
+        if: needs.measure.result != 'success'
+        run: |
+          echo "Both revision measurements must succeed." >&2
+          exit 1
+      - *setup-ruby
+      - *install-analyzer
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: crap-base
+          path: ${{ runner.temp }}/base
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: crap-head
+          path: ${{ runner.temp }}/head
+      - name: Publish summary and enforce regression limit
+        shell: bash
+        run: |
+          BUNDLE_GEMFILE="$RUNNER_TEMP/crap4ruby.gemfile" bundle exec crap4ruby \
+            --compare \
+            --base-report "$RUNNER_TEMP/base/report.json" \
+            --head-report "$RUNNER_TEMP/head/report.json" \
+            --fail-on-regression --limit 30 --min-increase 1 >> "$GITHUB_STEP_SUMMARY"
