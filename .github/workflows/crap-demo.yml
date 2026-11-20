@@ -1,0 +1,74 @@
+name: CRAP demo
+
+on:
+  pull_request:
+    branches: [ci/crap-demo-base]
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Demo regression gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          persist-credentials: false
+      - uses: ruby/setup-ruby@be3c7df29b3349ec6bcfc6b4792f1cf9f5237d18 # v1.343.0
+        with:
+          ruby-version: '3.3'
+          working-directory: base
+          bundler-cache: true
+      - name: Test and measure both revisions
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BUNDLE_GEMFILE: ${{ github.workspace }}/base/Gemfile
+        shell: bash
+        run: |
+          test "$(git -C base rev-parse HEAD)" = "$BASE_SHA"
+          test "$(git -C head rev-parse HEAD)" = "$HEAD_SHA"
+          tool="$GITHUB_WORKSPACE/base"
+          for side in base head; do
+            source="$GITHUB_WORKSPACE/$side/examples/pr-demo"
+            project="$(mktemp -d "$RUNNER_TEMP/crap4ruby-$side.XXXXXX")"
+            mkdir -p "$project/lib" "$project/test"
+            cp "$source/invoice.rb.example" "$project/lib/invoice.rb"
+            cp "$source/invoice_test.rb.example" "$project/test/invoice_test.rb"
+            revision="$BASE_SHA"
+            if [[ "$side" == head ]]; then
+              revision="$HEAD_SHA"
+            fi
+            (
+              cd "$project"
+              bundle exec ruby -Itest test/invoice_test.rb
+              bundle exec ruby -I"$tool/lib" "$tool/exe/crap4ruby" \
+                --source-root lib --json-report --revision "$revision" --no-save > "$RUNNER_TEMP/$side.json"
+            )
+          done
+      - name: Show the comparison and enforce the gate
+        env:
+          BUNDLE_GEMFILE: ${{ github.workspace }}/base/Gemfile
+        shell: bash
+        run: |
+          status=0
+          bundle exec ruby -Ibase/lib base/exe/crap4ruby \
+            --compare --base-report "$RUNNER_TEMP/base.json" --head-report "$RUNNER_TEMP/head.json" \
+            --fail-on-regression > "$RUNNER_TEMP/crap-demo-report.md" || status=$?
+          cat "$RUNNER_TEMP/crap-demo-report.md" >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: crap-demo-report
+          path: ${{ runner.temp }}/crap-demo-report.md
+          if-no-files-found: error
