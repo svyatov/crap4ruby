@@ -2,7 +2,15 @@
 
 module Invoice
   def self.quote(zone)
-    zone == :local ? 10 : 20
+    return 10 if zone == :local
+    return 12 if zone == :metro
+    return 14 if zone == :regional
+    return 16 if zone == :remote
+    return 18 if zone == :island
+    return 24 if zone == :international
+    return 30 if zone == :priority
+
+    20
   end
 
   def self.legacy_adjustment(quantity)
