@@ -36,9 +36,55 @@ class CLITest < Minitest::Test
 
     assert_equal 0, run_cli("--no-coverage")
     assert_includes @out.string, "CRAP Report"
+    assert_includes @out.string, "Scanned 1 file, 1 method."
+    assert_includes @out.string, "Coverage disabled"
+    assert_includes @out.string, "lib/sample.rb:2"
     assert_match(%r{pick\s+Sample\s+2\s+N/A\s+N/A}, @out.string)
     assert_includes snapshot, ':name "pick"'
     assert_includes snapshot, ":coverage nil, :crap nil"
+  end
+
+  def test_complexity_only_ranks_by_complexity_and_uses_the_start_of_define_method
+    write("lib/sample.rb", <<~RUBY)
+      def apple = 1
+      define_method(
+        :zebra
+      ) do |value|
+        value ? 1 : 0
+      end
+    RUBY
+
+    assert_equal 0, run_cli("--no-coverage")
+    assert_match(%r{zebra[^\n]*lib/sample\.rb:2.*apple[^\n]*lib/sample\.rb:1}m, @out.string)
+    assert_match(/:name "apple".*:name "zebra"/m, snapshot)
+  end
+
+  def test_explains_coverage_exceptions_without_changing_scores
+    write("lib/sample.rb", <<~RUBY)
+      def inline = 1
+      def unmeasured
+        1
+      end
+      methods = [def trailing
+        1; end]
+      def uncovered
+        1
+      end
+    RUBY
+    write("lib/absent.rb", "def absent\n  1\nend\n")
+    write("results.json", JSON.generate("Test" => {"coverage" => {
+      "lib/sample.rb" => [1, 1, nil, nil, 1, 1, 1, 0, nil]
+    }}))
+
+    assert_equal 0, run_cli("--coverage", "results.json", "--verbose")
+    assert_includes @out.string, "Scanned 2 files, 5 methods."
+    assert_includes @out.string, "Coverage: results.json"
+    assert_includes @out.string, "0 above CRAP 30, 3 unknown."
+    assert_match(%r{^inline\s+Object\s+1\s+N/A \(body shares declaration line\)\s+N/A}, @out.string)
+    assert_match(%r{^trailing\s+Object\s+1\s+N/A \(trailing code shares body line\)\s+N/A}, @out.string)
+    assert_match(%r{^unmeasured\s+Object\s+1\s+N/A \(no measurable lines in report\)\s+N/A}, @out.string)
+    assert_match(/^absent\s+Object\s+1\s+0\.0% \(file absent from report\)\s+2\.0/, @out.string)
+    assert_match(/^uncovered\s+Object\s+1\s+0\.0%\s+2\.0/, @out.string)
   end
 
   def test_reads_coverage_and_compares_unrounded_scores
@@ -48,7 +94,8 @@ class CLITest < Minitest::Test
     }}))
 
     assert_equal 0, run_cli("--coverage", "results.json", "--use-existing-coverage", "--threshold", "2.5")
-    assert_equal "No methods exceed CRAP 2.5.\n", @out.string
+    assert_includes @out.string, "No methods exceed CRAP 2.5.\n"
+    assert_includes @out.string, "0 above CRAP 2.5, 0 unknown."
     assert_includes snapshot, ":coverage 50.0, :crap 2.5"
     assert_equal 2, run_cli("--coverage", "results.json", "--threshold", "2.49")
     assert_match(/pick\s+Sample\s+2\s+50.0%\s+2.5/, @out.string)
@@ -75,7 +122,7 @@ class CLITest < Minitest::Test
 
     assert_equal 0, run_cli("--coverage", "results.json")
     assert_match(/high\s+Object\s+6\s+0.0%\s+42.0/, @out.string)
-    assert_includes @out.string, "unknown"
+    assert_match(/^unknown\s/, @out.string)
     refute_includes @out.string, "low"
     assert_includes snapshot, ':name "low"'
     full_snapshot = snapshot
@@ -127,7 +174,9 @@ class CLITest < Minitest::Test
 
   def test_no_save_does_not_create_snapshot_for_empty_selection
     assert_equal 0, run_cli("--no-save")
-    assert_equal "No methods found.\n", @out.string
+    assert_includes @out.string, "No methods found.\n"
+    assert_includes @out.string, "Scanned 0 files, 0 methods."
+    assert_includes @out.string, "Coverage not read: no source files."
     refute_path_exists File.join(@root, ".metrics")
   end
 
@@ -138,6 +187,7 @@ class CLITest < Minitest::Test
     }}))
 
     assert_equal 2, run_cli("--coverage", "results.json", "--threshold", "2.25599999999999999999")
+    assert_includes @out.string, "1 above CRAP 2.25599999999999999999, 0 unknown."
     assert_equal 0, run_cli("--coverage", "results.json", "--threshold", "2.256")
     assert_equal 0, run_cli("--coverage", "results.json", "--threshold", "0x3")
   end
@@ -185,8 +235,7 @@ class CLITest < Minitest::Test
     write("lib/sample.rb", 'define_method("line\nname") { true }')
 
     assert_equal 1, run_cli("--no-coverage", "--threshold", "1")
-    assert_equal 5, @out.string.lines.size
-    assert_includes @out.string, '"line\nname"'
+    assert_match(%r{^"line\\nname"[^\n]+lib/sample\.rb:1$}, @out.string)
     assert_equal 2, @err.string.lines.size
     assert_includes @err.string, '"Object#line\nname"'
     assert_includes snapshot, ':name "line\nname"'

@@ -4,7 +4,7 @@
 target :library do
   check "lib", "exe/*"
   signature "sig"
-  library "prism", "json", "optparse", "find", "open3", "fileutils", "tempfile", "etc"
+  library "prism", "json", "optparse", "find", "open3", "fileutils", "tempfile", "etc", "pathname"
   configure_code_diagnostics Steep::Diagnostic::Ruby.all_error
 end
 

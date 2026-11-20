@@ -36,22 +36,21 @@ module Crap4Ruby
     # Null and out-of-range lines do not enter the denominator.
     #
     # @param method [MethodInfo] method whose path and body lines select coverage
-    # @return [Rational, nil] exact fraction from 0 to 1; zero for an absent file,
-    #   or nil when body lines are ambiguous or no reported lines are measurable
-    def fraction(method)
+    # @return [Array(Rational, Symbol), Array(Rational, nil), Array(nil, Symbol)] fraction and coverage note
+    def measure(method)
       body = method.lines
-      return nil unless body
+      return [nil, method.coverage_note] unless body
 
       path = File.expand_path(method.path)
       path = File.realpath(path) if File.exist?(path)
       # @type var lines: Array[Integer?]?
       lines = @files[path]
-      return Rational(0) unless lines
+      return [Rational(0), :absent_file] unless lines
 
       hits = body.filter_map { |line| lines[line - 1] }
-      return nil if hits.empty?
+      return [nil, :no_measurable_lines] if hits.empty?
 
-      Rational(hits.count(&:positive?), hits.size)
+      [Rational(hits.count(&:positive?), hits.size), nil]
     end
 
     private

@@ -82,24 +82,24 @@ module Crap4Ruby
       name = defined_name(node)
       block = node.block
       if name && block.is_a?(Prism::BlockNode)
-        discover_block(block, name, scope, singleton, path, methods)
+        discover_block(block, name, scope, singleton, path, node.location.start_line, methods)
       else
         node.compact_child_nodes.each { |child| discover(child, scope, singleton, path, methods) }
       end
     end
 
-    def discover_block(block, name, scope, singleton, path, methods)
+    def discover_block(block, name, scope, singleton, path, line, methods)
       raise EncodingError unless name.valid_encoding?
 
       name = name.encode(Encoding::UTF_8)
       if @coverage
         parameters = block.parameters
         header = parameters.is_a?(Prism::BlockParametersNode) ? parameters.location : block.opening_loc
-        lines = body_lines(block.body, after: header.end_line, ending: block.location)
+        lines, note = body_lines(block.body, after: header.end_line, ending: block.location)
       end
       name = "self.#{name}" if singleton
       methods << MethodInfo.new(name, scope.empty? ? "Object" : scope.join("::"),
-        1 + decisions(block.body), lines, path)
+        1 + decisions(block.body), lines, path, line, note)
       discover(block.parameters, scope, singleton, path, methods)
       discover(block.body, scope, singleton, path, methods)
     rescue EncodingError
@@ -132,10 +132,11 @@ module Crap4Ruby
       name = "#{"self." if singleton || node.receiver}#{node.name}"
       if @coverage
         header = node.equal_loc || node.rparen_loc || node.parameters&.location || node.name_loc
-        lines = body_lines(node.body, after: header.end_line, ending: node.location)
+        lines, note = body_lines(node.body, after: header.end_line, ending: node.location)
       end
       complexity = 1 + decisions(node.body)
-      methods << MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), complexity, lines, path)
+      methods << MethodInfo.new(name, owner.empty? ? "Object" : owner.join("::"), complexity, lines, path,
+        node.location.start_line, note)
       discover(node.parameters, scope, singleton, path, methods)
       discover(node.body, scope, singleton, path, methods)
     end
@@ -275,21 +276,21 @@ module Crap4Ruby
     # @param node [Prism::Node, nil] method body
     # @param after [Integer] last line of the method declaration
     # @param ending [Prism::Location] definition location, including its closing delimiter
-    # @return [Array<Integer>, nil] body lines; nil when shared with the declaration
+    # @return [Array(Array<Integer>, nil), Array(nil, Symbol)] body lines or their ambiguity reason
     def body_lines(node, after:, ending:)
-      return [] unless node
+      return [[], nil] unless node
 
       # @type var start: Prism::Node?
       start = node.is_a?(Prism::BeginNode) && !node.begin_keyword_loc ? node.compact_child_nodes.first : node
-      return [] unless start
-      return nil if start.location.start_line <= after
+      return [[], nil] unless start
+      return [nil, :shared_declaration] if start.location.start_line <= after
 
       excluded = [] #: Array[Integer]
       last_line = body_end_node(node, excluded).location.end_line
       lines = (start.location.start_line..last_line).to_a - excluded
-      return nil if lines.include?(ending.end_line) && trailing_code?(ending)
+      return [nil, :shared_trailing_code] if lines.include?(ending.end_line) && trailing_code?(ending)
 
-      lines
+      [lines, nil]
     end
 
     def trailing_code?(location)

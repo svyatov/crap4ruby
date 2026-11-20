@@ -43,7 +43,10 @@ Default output shows methods with CRAP scores strictly above 30, plus methods wi
 An explicit `--threshold NUMBER` sets both the display limit and the enforced limit.
 The default display limit does not enforce a threshold or change the exit status.
 Use `--verbose` to show every analyzed method. Snapshots always contain every analyzed method.
-With `--no-coverage`, every CRAP score is unknown, so every method remains visible.
+Each row shows the source path relative to the analysis root and the method's declaration line.
+The summary shows the scan size, the selected coverage resultset, and counts of above-limit and unknown scores.
+The coverage column explains unknown scores and flags zero coverage caused by a file missing from the resultset.
+With `--no-coverage`, every method remains visible in descending complexity order. The summary says that coverage is disabled.
 
 To use Bundler, add `gem "crap4ruby", require: false` to your project's `Gemfile` and run `bundle install`.
 Run the tool with `bundle exec crap4ruby`.

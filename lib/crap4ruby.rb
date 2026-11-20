@@ -13,10 +13,10 @@ module Crap4Ruby
   end
 
   # Immutable static analysis of one method definition.
-  MethodInfo = Data.define(:name, :namespace, :complexity, :lines, :path)
+  MethodInfo = Data.define(:name, :namespace, :complexity, :lines, :path, :line, :coverage_note)
 
   # Immutable analysis result with coverage and a CRAP score.
-  Entry = Data.define(:name, :namespace, :complexity, :coverage, :crap, :path)
+  Entry = Data.define(:name, :namespace, :complexity, :coverage, :crap, :path, :line, :coverage_note)
 
   # @!parse
   #   class Crap4Ruby::MethodInfo
@@ -30,6 +30,10 @@ module Crap4Ruby
   #     attr_reader :lines
   #     # @return [String] source path supplied to the analyzer
   #     attr_reader :path
+  #     # @return [Integer] one-based declaration line
+  #     attr_reader :line
+  #     # @return [Symbol, nil] reason the analyzer could not attribute body lines
+  #     attr_reader :coverage_note
   #   end
   #   class Crap4Ruby::Entry
   #     # @return [String] method name, prefixed with `self.` for singleton methods
@@ -44,6 +48,10 @@ module Crap4Ruby
   #     attr_reader :crap
   #     # @return [String] source path supplied to the analyzer
   #     attr_reader :path
+  #     # @return [Integer] one-based declaration line
+  #     attr_reader :line
+  #     # @return [Symbol, nil] reason for an exceptional coverage result
+  #     attr_reader :coverage_note
   #   end
 end
 
