@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "crap4ruby baseline report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "tool_version", "prism_version", "revision", "source_roots", "coverage_path", "entries"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "tool_version": {"type": "string", "minLength": 1},
+    "prism_version": {"type": "string", "minLength": 1},
+    "revision": {
+      "type": "string",
+      "description": "Full Git object ID supplied by the caller.",
+      "pattern": "^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})(?![\\s\\S])"
+    },
+    "source_roots": {
+      "type": "array",
+      "description": "Sorted unique directories relative to the real analysis root. A dot denotes the analysis root itself.",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"anyOf": [{"const": "."}, {"$ref": "#/$defs/path"}]}
+    },
+    "coverage_path": {
+      "type": ["string", "null"],
+      "description": "SimpleCov resultset path. Null when a zero-file scan did not read coverage.",
+      "pattern": "^[^\\u0000]+(?![\\s\\S])"
+    },
+    "entries": {
+      "type": "array",
+      "description": "One record per definition, including repeated definitions.",
+      "items": {"$ref": "#/$defs/entry"}
+    }
+  },
+  "if": {"properties": {"coverage_path": {"type": "null"}}},
+  "then": {"properties": {"entries": {"maxItems": 0}}},
+  "$defs": {
+    "path": {
+      "type": "string",
+      "description": "Project-relative path with slash separators and no empty, dot, or parent components.",
+      "pattern": "^(?:(?!\\.{1,2}/)[^/\\u0000]+/)*(?!\\.{1,2}(?![\\s\\S]))[^/\\u0000]+(?![\\s\\S])"
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "line", "namespace", "kind", "name", "complexity", "coverage", "crap", "coverage_note"],
+      "examples": [
+        {
+          "path": "lib/invoice.rb", "line": 8, "namespace": "Invoice", "kind": "instance", "name": "total",
+          "complexity": 2, "coverage": 50.0, "crap": "5/2", "coverage_note": null
+        },
+        {
+          "path": "lib/invoice.rb", "line": 14, "namespace": "Invoice", "kind": "singleton", "name": "currency",
+          "complexity": 1, "coverage": null, "crap": null, "coverage_note": "shared_declaration"
+        }
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path",
+          "description": "Canonical source path within the report's source roots."
+        },
+        "line": {"type": "integer", "minimum": 1},
+        "namespace": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["instance", "singleton"]},
+        "name": {"type": "string", "description": "Literal method name without an added singleton prefix."},
+        "complexity": {"type": "integer", "minimum": 1},
+        "coverage": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "crap": {
+          "type": ["string", "null"],
+          "description": "Exact rational CRAP score, from complexity to complexity squared plus complexity. For absent_file the score equals that upper bound.",
+          "pattern": "^[1-9][0-9]*/[1-9][0-9]*(?![\\s\\S])"
+        },
+        "coverage_note": {
+          "enum": [null, "absent_file", "no_measurable_lines", "shared_declaration", "shared_trailing_code"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"coverage_note": {"enum": ["no_measurable_lines", "shared_declaration", "shared_trailing_code"]}}
+          },
+          "then": {"properties": {"coverage": {"type": "null"}, "crap": {"type": "null"}}},
+          "else": {"properties": {"coverage": {"type": "number"}, "crap": {"type": "string"}}}
+        },
+        {
+          "if": {"properties": {"coverage_note": {"const": "absent_file"}}},
+          "then": {"properties": {"coverage": {"const": 0}}}
+        }
+      ]
+    }
+  }
+}

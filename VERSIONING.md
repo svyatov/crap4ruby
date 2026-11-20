@@ -9,11 +9,12 @@ The compatibility policy covers:
 - Documented CLI options, positional file selection, and exit codes.
 - Documented complexity, coverage, and CRAP scoring semantics.
 - The `.metrics/crap.edn` schema, including field meanings and value types.
+- The [JSON report schema](schemas/report-v1.json), including field meanings and value types.
 - The minimum supported Ruby version.
 
-Terminal table spacing, diagnostic wording, and Ruby classes are implementation details.
+Terminal and Markdown layout, diagnostic wording, and Ruby classes are implementation details.
 YARD documents the Ruby interfaces for maintainers; those interfaces are outside this compatibility policy.
-Use the CLI and documented snapshot format when integrating with other tools.
+Use the CLI and documented report formats when integrating with other tools.
 
 ## Version changes
 

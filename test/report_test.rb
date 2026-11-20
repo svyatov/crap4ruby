@@ -4,7 +4,7 @@ require_relative "test_helper"
 
 class ReportTest < Minitest::Test
   def entry(name, score, path = "sample.rb")
-    Crap4Ruby::Entry.new(name, "Sample", 2, score ? 50.0 : nil, score, path, 1, nil)
+    Crap4Ruby::Entry.new(name, "Sample", 2, score ? 50.0 : nil, score, path, 1, nil, false)
   end
 
   def terminal(entries, threshold: 30, verbose: false)

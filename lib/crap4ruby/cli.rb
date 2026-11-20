@@ -5,6 +5,10 @@ require "optparse"
 module Crap4Ruby
   # Coordinates file discovery, coverage, scoring, and CLI output.
   class CLI
+    # Options used exclusively when comparing two JSON reports.
+    COMPARISON_FLAGS = %i[base_report head_report enforce limit min_increase].freeze
+    COMPARISON_OPTIONS = (COMPARISON_FLAGS + %i[source_roots compare]).freeze
+
     # Sets output destinations without running an analysis.
     #
     # @param stdout [#puts, #write] destination for reports, help, and version output
@@ -27,26 +31,42 @@ module Crap4Ruby
       return @stdout.puts(parser) || 0 if options[:help]
       return @stdout.puts(VERSION) || 0 if options[:version]
 
-      validate_options(options)
-      root = File.realpath(options[:root])
-      raise Error, "#{root}: project root must be a directory" unless File.directory?(root)
-
-      files = Discovery.call(root: root, source_roots: options[:source_roots], paths: paths, changed: options[:changed])
-      coverage, coverage_source = load_coverage(options, root, files.empty?)
-      entries = Report.sorted(Batch.call(files, coverage, jobs: options[:jobs]))
-      unless options[:no_save]
-        path = Report.write(entries, root: root)
-        @stderr.puts("Wrote #{path}")
-      end
-      @stdout.write(Report.terminal(entries, root: root, files: files.size, coverage_source: coverage_source,
-        threshold: options.fetch(:threshold, 30), limit: options[:threshold_label], verbose: options[:verbose] == true))
-      threshold_status(entries, options[:threshold])
+      options[:compare] ? compare(options, paths) : analyze(options, paths)
     rescue Error, OptionParser::ParseError, SystemCallError => error
       @stderr.puts("crap4ruby: #{error.message}")
       1
     end
 
     private
+
+    def analyze(options, paths)
+      validate_scan_options(options, paths)
+      root = File.realpath(options.fetch(:root, Dir.pwd))
+      raise Error, "#{root}: project root must be a directory" unless File.directory?(root)
+
+      scope = BaselineReport.scope(root, options[:source_roots]) if options[:json_report]
+      source_roots = scope&.map { |path| File.join(root, path) } || options[:source_roots]
+      files = Discovery.call(root: root, source_roots: source_roots, paths: paths,
+        changed: options[:changed] == true)
+      BaselineReport.validate_files!(root, files) if scope
+      coverage, coverage_source = load_coverage(options, root, files.empty?)
+      entries = Report.sorted(Batch.call(files, coverage, jobs: options[:jobs]))
+      output = analysis_output(entries, root, files.size, coverage_source, scope, options)
+      @stderr.puts("Wrote #{Report.write(entries, root: root)}") unless options[:no_save]
+      @stdout.write(output)
+      threshold_status(entries, options[:threshold])
+    end
+
+    def analysis_output(entries, root, files, coverage_source, scope, options)
+      if scope
+        path = options.fetch(:coverage, "coverage/.resultset.json") if coverage_source.is_a?(String)
+        return BaselineReport.dump(entries, root: root, source_roots: scope, coverage_path: path,
+          revision: options.fetch(:revision))
+      end
+
+      Report.terminal(entries, root: root, files: files, coverage_source: coverage_source,
+        threshold: options.fetch(:threshold, 30), limit: options[:threshold_label], verbose: options[:verbose] == true)
+    end
 
     # Removes parsed options from arguments and returns the remaining path selectors.
     #
@@ -55,10 +75,7 @@ module Crap4Ruby
     # @raise [OptionParser::ParseError] if an option or threshold is invalid
     def parse_options(arguments)
       # @type var options: options
-      options = {
-        root: Dir.pwd, source_roots: [], changed: false, coverage: "coverage/.resultset.json",
-        threshold_label: "30"
-      }
+      options = {source_roots: []}
       parser = OptionParser.new do |cli|
         cli.banner = "Usage: crap4ruby [options] [file-or-directory-or-filter ...]"
         cli.separator "Default output: CRAP > 30 and unknown scores; --threshold sets the display limit."
@@ -93,21 +110,86 @@ module Crap4Ruby
         end
         cli.on("--threshold NUMBER", "Exit 2 above limit; exit 1 if unknown scores could exceed it") do |value|
           # @type var value: String
-          number = Float(value)
-          raise ArgumentError unless number.finite?
-
-          threshold = Rational(value, exception: false) || number.to_r
-          raise ArgumentError if threshold.negative?
-
-          options[:threshold] = threshold
+          options[:threshold] = nonnegative_number(value, "--threshold")
           options[:threshold_label] = value.strip
-        rescue ArgumentError
-          raise OptionParser::InvalidArgument, "threshold must be finite and nonnegative"
         end
+        add_comparison_options(cli, options)
         cli.on("-h", "--help", "Show help") { options[:help] = true }
         cli.on("-v", "--version", "Show version") { options[:version] = true }
       end
       [options, parser, parser.parse(arguments)]
+    end
+
+    def add_comparison_options(cli, options)
+      cli.on("--json-report", "Export a complete versioned JSON report") { options[:json_report] = true }
+      cli.on("--revision SHA", "Full commit ID for --json-report") do |value|
+        # @type var value: String
+        options[:revision] = value
+      end
+      cli.on("--compare", "Compare --base-report and --head-report as Markdown") { options[:compare] = true }
+      cli.on("--base-report PATH", "JSON report for the base revision") do |value|
+        # @type var value: String
+        options[:base_report] = value
+      end
+      cli.on("--head-report PATH", "JSON report for the head revision") do |value|
+        # @type var value: String
+        options[:head_report] = value
+      end
+      cli.on("--fail-on-regression", "Enforce the comparison verdict") { options[:enforce] = true }
+      cli.on("--limit NUMBER", "CRAP limit for --compare (default: 30)") do |value|
+        # @type var value: String
+        options[:limit] = nonnegative_number(value, "--limit")
+      end
+      cli.on("--min-increase NUMBER", "Minimum material increase for --compare (default: 1)") do |value|
+        # @type var value: String
+        options[:min_increase] = nonnegative_number(value, "--min-increase")
+      end
+    end
+
+    def nonnegative_number(value, flag)
+      number = Float(value)
+      raise ArgumentError unless number.finite?
+
+      exact = Rational(value, exception: false) || number.to_r
+      raise ArgumentError if exact.negative?
+
+      exact
+    rescue ArgumentError
+      raise OptionParser::InvalidArgument, "#{flag} must be finite and nonnegative"
+    end
+
+    def compare(options, paths)
+      if !paths.empty? || !options[:source_roots].empty? || !(options.keys - COMPARISON_OPTIONS).empty?
+        raise Error, "--compare cannot be combined with scan options"
+      end
+
+      base_path = options[:base_report]
+      head_path = options[:head_report]
+      raise Error, "--compare requires --base-report and --head-report" unless base_path && head_path
+
+      base = BaselineReport.load(base_path)
+      head = BaselineReport.load(head_path)
+      BaselineReport.check_compatible!(base, head)
+      result = BaselineComparison.call(base, head, limit: options.fetch(:limit, Rational(30)),
+        min_increase: options.fetch(:min_increase, Rational(1)))
+      enforced = options[:enforce] == true
+      @stdout.write(BaselineComparison.markdown(result, enforced: enforced))
+      enforced ? result.status : 0
+    end
+
+    def validate_scan_options(options, paths)
+      raise Error, "comparison options require --compare" if COMPARISON_FLAGS.any? { |flag| options.key?(flag) }
+
+      validate_export(options, paths) if options[:json_report] || options[:revision]
+      validate_options(options)
+    end
+
+    def validate_export(options, paths)
+      raise Error, "--revision requires --json-report" unless options[:json_report]
+      raise Error, "--json-report requires --revision SHA" unless options[:revision]
+      return unless options[:changed] || options[:no_coverage] || !paths.empty?
+
+      raise Error, "--json-report requires coverage and a complete source scope"
     end
 
     # Rejects a coverage command when coverage is disabled or explicitly read-only.
@@ -146,7 +228,7 @@ module Crap4Ruby
       return [nil, false] if options[:no_coverage]
       return [nil, nil] if empty
 
-      report = File.expand_path(options[:coverage], root)
+      report = File.expand_path(options.fetch(:coverage, "coverage/.resultset.json"), root)
       run_coverage(options[:command], root, report) if options[:command]
       [Coverage.load(report, root: root), report]
     end

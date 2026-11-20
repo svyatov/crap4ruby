@@ -12,7 +12,8 @@ class CoverageTest < Minitest::Test
       File.write(report, JSON.generate("RSpec" => {"coverage" => {
         "sample.rb" => {"lines" => [1, 4, nil, 0, nil]}
       }}))
-      method = Crap4Ruby::MethodInfo.new("pick", "Sample", 4, [2, 3, 4], File.join(root, "sample.rb"), 1, nil)
+      method = Crap4Ruby::MethodInfo.new("pick", "Sample", 4, [2, 3, 4],
+        File.join(root, "sample.rb"), 1, nil, false)
 
       entry = Crap4Ruby::Score.call(method, Crap4Ruby::Coverage.load(report, root: root))
 
@@ -28,7 +29,7 @@ class CoverageTest < Minitest::Test
         "RSpec" => {"coverage" => {absolute => [1, 1, 0, nil]}},
         "Minitest" => {"coverage" => {"sample.rb" => {"lines" => [1, 0, 3, nil]}}}
       ))
-      method = Crap4Ruby::MethodInfo.new("pick", "Sample", 4, [2, 3], absolute, 1, nil)
+      method = Crap4Ruby::MethodInfo.new("pick", "Sample", 4, [2, 3], absolute, 1, nil, false)
       entry = Crap4Ruby::Score.call(method, Crap4Ruby::Coverage.load(report, root: root))
 
       assert_equal 100.0, entry.coverage
@@ -40,7 +41,7 @@ class CoverageTest < Minitest::Test
     in_project do |root, report|
       File.write(report, JSON.generate("RSpec" => {"coverage" => {"empty.rb" => {"lines" => [1, nil]}}}))
       coverage = Crap4Ruby::Coverage.load(report, root: root)
-      method = Crap4Ruby::MethodInfo.new("pick", "Sample", 3, [2], File.join(root, "absent.rb"), 1, nil)
+      method = Crap4Ruby::MethodInfo.new("pick", "Sample", 3, [2], File.join(root, "absent.rb"), 1, nil, false)
 
       assert_equal([0.0, 12.0], Crap4Ruby::Score.call(method, coverage).then { |entry| [entry.coverage, entry.crap] })
       assert_nil Crap4Ruby::Score.call(method, nil).crap

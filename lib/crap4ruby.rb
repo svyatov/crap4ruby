@@ -13,10 +13,10 @@ module Crap4Ruby
   end
 
   # Immutable static analysis of one method definition.
-  MethodInfo = Data.define(:name, :namespace, :complexity, :lines, :path, :line, :coverage_note)
+  MethodInfo = Data.define(:name, :namespace, :complexity, :lines, :path, :line, :coverage_note, :singleton)
 
   # Immutable analysis result with coverage and a CRAP score.
-  Entry = Data.define(:name, :namespace, :complexity, :coverage, :crap, :path, :line, :coverage_note)
+  Entry = Data.define(:name, :namespace, :complexity, :coverage, :crap, :path, :line, :coverage_note, :singleton)
 
   # @!parse
   #   class Crap4Ruby::MethodInfo
@@ -34,6 +34,8 @@ module Crap4Ruby
   #     attr_reader :line
   #     # @return [Symbol, nil] reason the analyzer could not attribute body lines
   #     attr_reader :coverage_note
+  #     # @return [Boolean] whether the method is a singleton method
+  #     attr_reader :singleton
   #   end
   #   class Crap4Ruby::Entry
   #     # @return [String] method name, prefixed with `self.` for singleton methods
@@ -52,6 +54,8 @@ module Crap4Ruby
   #     attr_reader :line
   #     # @return [Symbol, nil] reason for an exceptional coverage result
   #     attr_reader :coverage_note
+  #     # @return [Boolean] whether the method is a singleton method
+  #     attr_reader :singleton
   #   end
 end
 
@@ -61,4 +65,7 @@ require_relative "crap4ruby/score"
 require_relative "crap4ruby/batch"
 require_relative "crap4ruby/report"
 require_relative "crap4ruby/discovery"
+require_relative "crap4ruby/baseline_report"
+require_relative "crap4ruby/baseline_comparison"
+require_relative "crap4ruby/baseline_markdown"
 require_relative "crap4ruby/cli"
