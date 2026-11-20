@@ -77,19 +77,61 @@ Then run `bundle install` and `bundle exec crap4ruby` in that project.
 gem "simplecov", require: false, group: :test
 ```
 
-Place this at the top of `test/test_helper.rb` or `spec/spec_helper.rb`, before requiring application code:
+Run `bundle install`, then configure your test runner. Both recipes write `coverage/.resultset.json` with the default SimpleCov settings.
+
+### RSpec
+
+Put these lines at the top of `spec/spec_helper.rb`, before any code that loads the application:
 
 ```ruby
 require "simplecov"
 SimpleCov.start
 ```
 
-Run your tests, then run `crap4ruby`. RSpec and Minitest work through the same SimpleCov report format.
+Run RSpec from the project root with the helper loaded before the specs:
+
+```sh
+bundle exec rspec --require ./spec/spec_helper.rb
+```
+
+### Minitest
+
+Put these lines at the top of `test/test_helper.rb`, before any code that loads the application:
+
+```ruby
+require "simplecov"
+SimpleCov.start
+
+require "minitest/autorun"
+```
+
+Require the helper before application code in each test file. For files directly under `test/`, use `require_relative "test_helper"`.
+
+If the project has no `test` task, add `gem "rake"` to the `Gemfile` if needed and run `bundle install`.
+Add this task to the `Rakefile` and adjust the pattern to match your test files:
+
+```ruby
+require "rake/testtask"
+
+Rake::TestTask.new(:test) do |task|
+  task.pattern = "test/**/*_test.rb"
+end
+```
+
+Run Minitest from the project root:
+
+```sh
+bundle exec rake test
+```
+
+### Analyze the results
+
+After the tests pass, run `bundle exec crap4ruby --verbose --no-save` to inspect the measured methods.
 
 You can also supply an explicit command:
 
 ```sh
-crap4ruby --coverage-command 'bundle exec rspec'
+crap4ruby --coverage-command 'bundle exec rspec --require ./spec/spec_helper.rb'
 crap4ruby --coverage custom/.resultset.json
 ```
 
@@ -147,6 +189,7 @@ Selections of at least 64 files automatically use up to four worker processes, l
 Use `--json-report` to record a baseline and `--compare` to review changes in method risk.
 These options are listed under [Unreleased in the changelog](CHANGELOG.md#unreleased).
 Set `REPORT_DIR` to an absolute path to a directory shared by both checkouts.
+Use the [RSpec](#rspec) or [Minitest](#minitest) test command in each checkout. Remove any previous `coverage/.resultset.json` before each test run so SimpleCov starts with fresh data.
 
 1. Check out the base commit and run its tests with fresh SimpleCov coverage. Export the report from that checkout.
 
@@ -197,8 +240,10 @@ A missing baseline measurement appears in the report without failing the gate on
 
 Copy the [example workflow](examples/crap4ruby-pr.yml) to `.github/workflows/crap4ruby-pr.yml`.
 Set the repository Actions variables `CRAP4RUBY_VERSION` and `CRAP4RUBY_PRISM_VERSION` to exact, compatible gem versions that support these options.
-Adapt the Ruby version and test command to your project. Keep the scan scope identical across revisions.
+Adapt the Ruby version and use the test command from the [RSpec](#rspec) or [Minitest](#minitest) recipe. Keep the scan scope identical across revisions.
 The workflow tests the exact pull request base and head commits in separate jobs. The comparison job publishes the Markdown summary and retains the gate exit status.
+
+See the [draft demo PR](https://github.com/svyatov/crap4ruby/pull/27) for a measured regression. Open the **CRAP demo** workflow run from the Checks tab to view the job summary.
 
 ## Complexity and coverage
 

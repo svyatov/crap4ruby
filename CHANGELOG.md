@@ -13,6 +13,7 @@ Version numbers follow [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.
 ### Changed
 
 - Sort the terminal report by descending cyclomatic complexity when using `--no-coverage`.
+- Document SimpleCov setup and revision comparison commands for RSpec and Minitest.
 
 ## [0.2.4] - 2026-11-13
 
